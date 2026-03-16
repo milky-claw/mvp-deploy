@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📝 Text Stats</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { min-height: 100vh; background: #1e1e2e; color: #cdd6f4; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 1.5rem; color: #f38ba8; }
+    .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .panel { display: flex; flex-direction: column; }
+    .panel-label { font-size: 0.85rem; color: #9399b2; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+    textarea { flex: 1; min-height: 300px; padding: 1rem; border: 2px solid #313244; border-radius: 12px; background: #181825; color: #cdd6f4; font-size: 1rem; resize: none; line-height: 1.6; }
+    textarea:focus { outline: none; border-color: #cba6f7; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+    .stat-card { background: #313244; padding: 1.25rem; border-radius: 12px; text-align: center; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-value { font-size: 2rem; font-weight: 700; color: #89b4fa; }
+    .stat-label { font-size: 0.8rem; color: #9399b2; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card:nth-child(2) .stat-value { color: #a6e3a1; }
+    .stat-card:nth-child(3) .stat-value { color: #f9e2af; }
+    .stat-card:nth-child(4) .stat-value { color: #f38ba8; }
+    .stat-card:nth-child(5) .stat-value { color: #94e2d5; }
+    .stat-card:nth-child(6) .stat-value { color: #cba6f7; }
+    .clear-btn { display: block; margin: 1rem auto 0; padding: 0.5rem 1.5rem; background: #45475a; color: #cdd6f4; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    .clear-btn:hover { background: #585b70; }
+    @media (max-width: 700px) { .editor { grid-template-columns: 1fr; } textarea { min-height: 200px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Text Statistics</h1>
+    
+    <div class="editor">
+      <div class="panel">
+        <div class="panel-label">Input Text</div>
+        <textarea id="input" placeholder="Paste or type your text here..."></textarea>
+        <button class="clear-btn" id="clearBtn">Clear</button>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Preview</div>
+        <textarea id="preview" readonly></textarea>
+      </div>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="words">0</div>
+        <div class="stat-label">Words</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="chars">0</div>
+        <div class="stat-label">Characters</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="charsNoSpace">0</div>
+        <div class="stat-label">Chars (no spaces)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="sentences">0</div>
+        <div class="stat-label">Sentences</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="paragraphs">0</div>
+        <div class="stat-label">Paragraphs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="readingTime">0s</div>
+        <div class="stat-label">Reading Time</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    const wordsEl = document.getElementById('words');
+    const charsEl = document.getElementById('chars');
+    const charsNoSpaceEl = document.getElementById('charsNoSpace');
+    const sentencesEl = document.getElementById('sentences');
+    const paragraphsEl = document.getElementById('paragraphs');
+    const readingTimeEl = document.getElementById('readingTime');
+
+    function updateStats() {
+      const text = input.value;
+      
+      // Words - split by whitespace, filter empty
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      wordsEl.textContent = words.toLocaleString();
+      
+      // Characters
+      charsEl.textContent = text.length.toLocaleString();
+      
+      // Characters without spaces
+      charsNoSpaceEl.textContent = text.replace(/\s/g, '').length.toLocaleString();
+      
+      // Sentences - split by .!? followed by space or end
+      const sentences = text ? text.split(/[.!?]+(?:\s+|$)/).filter(s => s.trim()).length : 0;
+      sentencesEl.textContent = sentences.toLocaleString();
+      
+      // Paragraphs - split by double newlines or more
+      const paragraphs = text ? text.split(/\n\s*\n/).filter(p => p.trim()).length : 0;
+      paragraphsEl.textContent = paragraphs || (text.trim() ? 1 : 0);
+      
+      // Reading time - avg 200 words per minute
+      const minutes = words / 200;
+      if (minutes < 1) {
+        readingTimeEl.textContent = Math.ceil(minutes * 60) + 's';
+      } else if (minutes < 60) {
+        readingTimeEl.textContent = Math.ceil(minutes) + 'm';
+      } else {
+        readingTimeEl.textContent = Math.floor(minutes / 60) + 'h ' + Math.ceil(minutes % 60) + 'm';
+      }
+      
+      // Preview - show first 500 chars
+      preview.value = text.slice(0, 500) + (text.length > 500 ? '\n\n... (truncated)' : '');
+    }
+
+    input.addEventListener('input', updateStats);
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      updateStats();
+    });
+  </script>
+</body>
+</html>

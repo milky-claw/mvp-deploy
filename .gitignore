@@ -1,0 +1,25 @@
+# Ignore embedded MVP repos
+mvp1-landing/
+mvp3-tool/
+mvp4-lead-capture/
+mvp5-roi-calculator/
+mvp6-url-shortener/
+mvp7-quote-gen/
+mvp8-lead-qual/
+mvp9-calc/
+mvp10-invoice/
+mvp11-habits/
+mvp12-poll/
+mvp13-unit-converter/
+mvp14-contact-form/
+mvp15-image-compress/
+mvp16-json-formatter/
+mvp17-password-gen/
+mvp18-color-palette/
+mvp19-lorem-ipsum/
+mvp20-base64-tool/
+mvp21-case-converter/
+mvp22-url-encoder/
+mvp23-password-strength/
+mvp24-markdown-preview/
+mvp2-script/
