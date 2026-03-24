@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #c56bff; }
+    .input-section { background: #16213e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    .color-input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+    input[type="color"] { width: 60px; height: 40px; border: none; border-radius: 8px; cursor: pointer; }
+    input[type="text"] { flex: 1; padding: 12px; border: 2px solid #333; border-radius: 8px; background: #0f0f23; color: #fff; font-size: 16px; font-family: 'Monaco', monospace; }
+    .generate-btn { width: 100%; background: #c56bff; color: #fff; font-weight: bold; font-size: 16px; padding: 14px; border: none; border-radius: 8px; cursor: pointer; }
+    .generate-btn:hover { background: #b355ff; }
+    .palettes { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .palette-card { background: #16213e; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+    .palette-header { padding: 12px 15px; background: #0f0f23; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .palette-name { color: #c56bff; }
+    .copy-all { background: #333; color: #aaa; border: none; padding: 5px 10px; border-radius: 4px; cursor: font-size: 11px; }
+    .color-row { display: flex; height: 60px; }
+    .color-swatch { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: flex 0.2s; position: relative; }
+    .color-swatch:hover { flex: 2; }
+    .color-hex { font-size: 11px; font-family: 'Monaco', monospace; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; }
+    .color-name { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+    .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+    .preset-btn { background: #333; color: #aaa; padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; }
+    .preset-btn:hover { background: #444; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #c56bff; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Color Palette Generator</h1>
+    <div class="input-section">
+      <label>Base Color:</label>
+      <div class="color-input-group">
+        <input type="color" id="baseColor" value="#6366f1">
+        <input type="text" id="hexInput" value="#6366f1" placeholder="#6366f1">
+      </div>
+      <div class="presets">
+        <button class="preset-btn" onclick="setColor('#6366f1')">Indigo</button>
+        <button class="preset-btn" onclick="setColor('#10b981')">Emerald</button>
+        <button class="preset-btn" onclick="setColor('#f59e0b')">Amber</button>
+        <button class="preset-btn" onclick="setColor('#ef4444')">Red</button>
+        <button class="preset-btn" onclick="setColor('#8b5cf6')">Violet</button>
+      </div>
+      <button class="generate-btn" onclick="generatePalettes()">Generate Palettes</button>
+    </div>
+    <div class="palettes" id="palettes"></div>
+  </div>
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    // Color conversion helpers
+    function hexToHsl(hex) {
+      let r = parseInt(hex.slice(1, 3), 16) / 255;
+      let g = parseInt(hex.slice(3, 5), 16) / 255;
+      let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      return [h * 360, s * 100, l * 100];
+    }
+
+    function hslToHex(h, s, l) {
+      h /= 360; s /= 100; l /= 100;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return '#' + [r, g, b].map(x => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('');
+    }
+
+    function setColor(hex) {
+      document.getElementById('baseColor').value = hex;
+      document.getElementById('hexInput').value = hex;
+    }
+
+    function generatePalettes() {
+      const baseHex = document.getElementById('hexInput').value;
+      const [h, s, l] = hexToHsl(baseHex);
+      
+      const palettesEl = document.getElementById('palettes');
+      palettesEl.innerHTML = '';
+      
+      // Generate different palette types
+      const paletteTypes = [
+        { name: 'Lightness Scale', colors: generate lightness(h, s) },
+        { name: 'Complementary', colors: generateComplementary(h, s, l) },
+        { name: 'Analogous', colors: generateAnalogous(h, s, l) },
+        { name: 'Triadic', colors: generateTriadic(h, s, l) },
+        { name: 'Shades', colors: generateShades(h, s, l) }
+      ];
+
+      paletteTypes.forEach(palette => {
+        const card = document.createElement('div');
+        card.className = 'palette-card';
+        
+        let colorRows = '';
+        palette.colors.forEach((color, i) => {
+          colorRows += `<div class="color-swatch" style="background: ${color.hex}" onclick="copyColor('${color.hex}')">
+            <span class="color-hex">${color.hex}</span>
+            <span class="color-name">${color.name}</span>
+          </div>`;
+        });
+
+        card.innerHTML = `
+          <div class="palette-header">
+            <span class="palette-name">${palette.name}</span>
+            <button class="copy-all" onclick="copyPalette(['${palette.colors.map(c => c.hex).join("','")}'])">Copy All</button>
+          </div>
+          <div class="color-row">${colorRows}</div>
+        `;
+        palettesEl.appendChild(card);
+      });
+    }
+
+    function generate lightness(h, s) {
+      return [
+        { hex: hslToHex(h, s, 95), name: '50' },
+        { hex: hslToHex(h, s, 85), name: '100' },
+        { hex: hslToHex(h, s, 75), name: '200' },
+        { hex: hslToHex(h, s, 65), name: '300' },
+        { hex: hslToHex(h, s, 55), name: '400' },
+        { hex: hslToHex(h, s, 45), name: '500' },
+        { hex: hslToHex(h, s, 35), name: '600' },
+        { hex: hslToHex(h, s, 25), name: '700' }
+      ];
+    }
+
+    function generateComplementary(h, s, l) {
+      return [
+        { hex: hslToHex(h, s, l), name: 'Base' },
+        { hex: hslToHex((h + 180) % 360, s, l), name: 'Complement' },
+        { hex: hslToHex(h, Math.max(0, s - 20), Math.min(95, l + 30)), name: 'Light' },
+        { hex: hslToHex((h + 180) % 360, Math.max(0, s - 20), Math.max(20, l - 30)), name: 'Dark' }
+      ];
+    }
+
+    function generateAnalogous(h, s, l) {
+      return [
+        { hex: hslToHex((h - 30 + 360) % 360, s, l), name: '-30°' },
+        { hex: hslToHex(h, s, l), name: 'Base' },
+        { hex: hslToHex((h + 30) % 360, s, l), name: '+30°' },
+        { hex: hslToHex((h - 60 + 360) % 360, s, l), name: '-60°' },
+        { hex: hslToHex((h + 60) % 360, s, l), name: '+60°' }
+      ];
+    }
+
+    function generateTriadic(h, s, l) {
+      return [
+        { hex: hslToHex(h, s, l), name: 'Base' },
+        { hex: hslToHex((h + 120) % 360, s, l), name: '+120°' },
+        { hex: hslToHex((h + 240) % 360, s, l), name: '+240°' }
+      ];
+    }
+
+    function generateShades(h, s, l) {
+      return [
+        { hex: hslToHex(h, s, Math.min(95, l + 40)), name: 'Lightest' },
+        { hex: hslToHex(h, s, Math.min(95, l + 20)), name: 'Light' },
+        { hex: hslToHex(h, s, l), name: 'Base' },
+        { hex: hslToHex(h, s, Math.max(20, l - 20)), name: 'Dark' },
+        { hex: hslToHex(h, s, Math.max(10, l - 40)), name: 'Darkest' }
+      ];
+    }
+
+    function copyColor(hex) {
+      navigator.clipboard.writeText(hex);
+      showToast();
+    }
+
+    function copyPalette(colors) {
+      navigator.clipboard.writeText(colors.join(', '));
+      showToast();
+    }
+
+    function showToast() {
+      document.getElementById('toast').classList.add('show');
+      setTimeout(() => document.getElementById('toast').classList.remove('show'), 2000);
+    }
+
+    // Sync color input with text input
+    document.getElementById('baseColor').addEventListener('input', (e) => {
+      document.getElementById('hexInput').value = e.target.value;
+    });
+    document.getElementById('hexInput').addEventListener('change', (e) => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+        document.getElementById('baseColor').value = e.target.value;
+      }
+    });
+
+    // Generate on load
+    generatePalettes();
+  </script>
+</body>
+</html>
