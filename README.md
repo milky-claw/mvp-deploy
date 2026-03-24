@@ -1,25 +1,71 @@
-# MVP Deploy - March 15, 2026
+# MVP Deploy - March 24, 2026
 
-**Time:** 4:00 AM | **Status:** Test Scripts Built | **Total:** 24 MVPs
-
----
-
-## 🧪 Test Infrastructure Added (Today)
-
-| # | MVP | Test Script | Status |
-|---|-----|-------------|--------|
-| 22 | URL Encoder/Decoder | `mvp22-url-encoder/test-runner.js` | ✅ 5 tests pass |
-| 23 | Password Strength | `mvp23-password-strength/test-runner.js` | ✅ 5 tests pass |
-| 24 | Markdown Preview | `mvp24-markdown-preview/test-runner.js` | ✅ 5 tests pass |
-
-**Run all tests:** `cd mvp-deploy && node test-all.js`
+**Time:** 4:00 AM | **Status:** Built & tested MVPs 37-39 | **Total:** 39 MVPs
 
 ---
 
-## 🚀 LIVE URLs
+## 🆕 Built Today - TEST SUITE ADDED
+
+Yesterday's 3 MVPs (34-36) now have test runners added:
+
+| # | MVP | Test File | Test Status |
+|---|-----|-----------|-------------|
+| 34 | QR Code Generator | test-runner.js | ✅ 6/6 passed |
+| 35 | Base64 Encoder/Decoder | test-runner.js | ✅ 12/12 passed |
+| 36 | Cron Expression Builder | test-runner.js | ✅ 10/10 passed |
+
+**Total: 28 automated tests**
+
+Run: `node test-runner.js` in each MVP folder
+
+---
+
+## 🆕 Built Yesterday (March 21)
 
 | # | MVP | Description | URL |
 |---|-----|-------------|-----|
+| 34 | QR Code Generator | Generate QR codes from text/URLs | https://milky-claw.github.io/mvp34-qr-generator/ |
+| 35 | Base64 Encoder/Decoder | Encode/decode with Unicode support | https://milky-claw.github.io/mvp35-base64-tool/ |
+| 36 | Cron Expression Builder | Visual cron builder with presets | https://milky-claw.github.io/mvp36-cron-builder/ |
+| 37 | Hash Generator | Generate MD5, SHA-1/256/384/512 hashes | https://milky-claw.github.io/mvp-deploy/mvp37-hash-generator/ |
+| 38 | Regex Tester | Test regex patterns with flags & presets | https://milky-claw.github.io/mvp-deploy/mvp38-regex-tester/ |
+| 39 | Color Palette | Generate color palettes from hex codes | https://milky-claw.github.io/mvp-deploy/mvp39-color-palette/ |
+
+---
+
+## Previous (March 20)
+
+| # | MVP | Description | URL |
+|---|-----|-------------|-----|
+| 31 | URL Preview | Fetch Open Graph metadata from any URL | https://milky-claw.github.io/mvp31-url-preview/ |
+| 32 | Text Diff Tool | Compare two texts and highlight differences | https://milky-claw.github.io/mvp32-text-diff/ |
+| 33 | YAML Validator | Validate, parse, and format YAML | https://milky-claw.github.io/mvp33-yaml-validator/ |
+
+---
+
+## Previous (March 18)
+
+| # | MVP | Description | URL |
+|---|-----|-------------|-----|
+| 28 | Random Picker | Wheel/spinner for random selection | https://milky-claw.github.io/mvp28-random-picker/ |
+| 29 | Timestamp Converter | Unix timestamp ↔ human date | https://milky-claw.github.io/mvp29-timestamp-converter/ |
+| 30 | JSON ↔ CSV Converter | Convert between JSON and CSV | https://milky-claw.github.io/mvp30-json-csv/ |
+
+---
+
+## 🚀 LIVE URLs (Recent)
+
+| # | MVP | Description | URL |
+|---|-----|-------------|-----|
+| 31 | URL Preview | Metadata fetcher | https://milky-claw.github.io/mvp31-url-preview/ |
+| 32 | Text Diff Tool | Text comparison | https://milky-claw.github.io/mvp32-text-diff/ |
+| 33 | YAML Validator | YAML parser & formatter | https://milky-claw.github.io/mvp33-yaml-validator/ |
+| 28 | Random Picker | Random selection tool | https://milky-claw.github.io/mvp28-random-picker/ |
+| 29 | Timestamp Converter | Unix ↔ Date converter | https://milky-claw.github.io/mvp29-timestamp-converter/ |
+| 30 | JSON-CSV Converter | JSON to CSV tool | https://milky-claw.github.io/mvp30-json-csv/ |
+| 25 | Timer / Stopwatch | Stopwatch with lap times + countdown timer | https://milky-claw.github.io/mvp25-timer/ |
+| 26 | QR Code Generator | Generate QR codes from text/URLs, download PNG | https://milky-claw.github.io/mvp26-qr-generator/ |
+| 27 | Text Statistics | Word count, char count, reading time | https://milky-claw.github.io/mvp27-text-stats/ |
 | 22 | URL Encoder/Decoder | Encode/decode URLs and text | https://milky-claw.github.io/mvp22-url-encoder/ |
 | 23 | Password Strength | Real-time password analysis | https://milky-claw.github.io/mvp23-password-strength/ |
 | 24 | Markdown Preview | Split-pane editor with live preview | https://milky-claw.github.io/mvp24-markdown-preview/ |
@@ -54,18 +100,24 @@
 | 22 | URL Encoder | Encode/decode URLs and text | https://milky-claw.github.io/mvp22-url-encoder/ |
 | 23 | Password Strength | Real-time password analysis | https://milky-claw.github.io/mvp23-password-strength/ |
 | 24 | Markdown Preview | Split-pane editor with live preview | https://milky-claw.github.io/mvp24-markdown-preview/ |
+| 25 | Timer / Stopwatch | Stopwatch with lap times + countdown | https://milky-claw.github.io/mvp25-timer/ |
+| 26 | QR Code Generator | Generate QR codes, download PNG | https://milky-claw.github.io/mvp26-qr-generator/ |
+| 27 | Text Statistics | Word count, chars, reading time | https://milky-claw.github.io/mvp27-text-stats/ |
+| 28 | Random Picker | Random selection from list | https://milky-claw.github.io/mvp28-random-picker/ |
+| 29 | Timestamp Converter | Unix timestamp to date & vice versa | https://milky-claw.github.io/mvp29-timestamp-converter/ |
+| 30 | JSON-CSV Converter | Convert between JSON and CSV | https://milky-claw.github.io/mvp30-json-csv/ |
 
 ---
 
 ## Today's Actions
 
-### Verified & Tested (March 14)
+### Built & Deployed (March 18)
 
-1. **MVP 22 - URL Encoder/Decoder** - Fixed deployment, added test suite
-2. **MVP 23 - Password Strength Tester** - Verified working, added test suite  
-3. **MVP 24 - Markdown Preview** - Verified working, added test suite
+1. **MVP 28 - Random Picker** - Random selection from list with winner history
+2. **MVP 29 - Timestamp Converter** - Unix timestamp ↔ human readable date conversion
+3. **MVP 30 - JSON-CSV Converter** - Bidirectional JSON/CSV conversion with download
 
-All 3 tools tested and functional. Each has `/test.html` for validation.
+All 3 deployed to GitHub Pages.
 
 ---
 
