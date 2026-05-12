@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lorem Ipsum Generator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #00d9ff; margin-bottom: 1.5rem; }
+        .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+        label { font-size: 0.9rem; color: #aaa; }
+        input, select { padding: 0.5rem; border-radius: 6px; border: 1px solid #333; background: #252540; color: #fff; }
+        button { padding: 0.6rem 1.2rem; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #00b8d9; }
+        .output { background: #252540; padding: 1.5rem; border-radius: 8px; line-height: 1.7; white-space: pre-wrap; min-height: 200px; }
+        .copy-btn { background: #4a4a6a; color: #fff; margin-left: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Lorem Ipsum Generator</h1>
+        <div class="controls">
+            <div>
+                <label>Paragraphs:</label>
+                <input type="number" id="paras" value="3" min="1" max="20" style="width: 70px;">
+            </div>
+            <div>
+                <label>Type:</label>
+                <select id="type">
+                    <option value="classic">Classic Lorem</option>
+                    <option value="cat">Cat Ipsum</option>
+                    <option value="coffee">Coffee Ipsum</option>
+                    <option value="hipster">Hipster Ipsum</option>
+                </select>
+            </div>
+            <button onclick="generate()">Generate</button>
+            <button class="copy-btn" onclick="copy()">Copy</button>
+        </div>
+        <div class="output" id="output">Click Generate to create placeholder text...</div>
+    </div>
+    <script>
+        const classics = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split('. '),
+            cats = "Cat ipsum dolor sit amet, knead the blankets for stare at the wall, touch my nose, i want to play outside, kitty time. Jump on the table and knock things off make muffins cat loaf. Knock dish off table eat from dish, but chase the piglet eat the fat from my owner's plate. Jump on keyboard pet right paw, lower left paw. Chase mouse leave dead animals on desk groom yourself 24/7. Stare at the wall, bite, scratch. Meow all night.",
+            coffee = "Coffee beans tempor, drip, caffeine, roast, espresso robusta, aroma, barista, cappuccino, latte, macchiato. Single origin, grounds, java, mocha, brewed, iced, Americano. Extraction, crema, espresso, robusta, arabica, dark roast. Milk, foam, cinnamon. Medium roast, dark roast, espresso.",
+            hipsters = "Retro beard chia, pork belly Carles asymmetrical pickled. Typewriter sriracha drinking vinegar, lo-fi sustainable master cleanse narwhal viral. Schlitz fap yr, disrupt Carles pork belly mustache. Fanny pack tousled retro readymade viral.";
+        
+        function getWords(type) {
+            const map = { classic: classics, cat: cats, coffee: coffee, hipster: hipsters };
+            const text = map[type].join('. ');
+            return text.split(/\s+/);
+        }
+        
+        function generate() {
+            const paras = parseInt(document.getElementById('paras').value);
+            const type = document.getElementById('type').value;
+            const words = getWords(type);
+            let output = '', currentPara = '';
+            
+            for (let i = 0; i < paras * 30; i++) {
+                currentPara += (i % 12 === 0 && i > 0 ? '. ' : ' ') + words[Math.floor(Math.random() * words.length)];
+            }
+            
+            const paragraphs = currentPara.match(/.{1,200}/g) || [currentPara];
+            output = paragraphs.slice(0, paras).map(p => p.trim() + '.').join('\n\n');
+            document.getElementById('output').textContent = output || 'Click Generate...';
+        }
+        
+        function copy() {
+            navigator.clipboard.writeText(document.getElementById('output').textContent);
+        }
+        
+        generate();
+    </script>
+</body>
+</html>

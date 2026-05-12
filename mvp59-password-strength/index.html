@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #1a1a1a; padding: 2rem; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+    h1 { text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem; color: #fff; }
+    input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #333; border-radius: 8px; background: #252525; color: #fff; font-size: 1rem; font-family: monospace; }
+    .bar { height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+    .bar-fill { height: 100%; width: 0; transition: width 0.3s, background 0.3s; }
+    .strength { text-align: center; font-weight: 600; margin-bottom: 1rem; }
+    .tips { font-size: 0.875rem; color: #888; line-height: 1.6; }
+    .tips li { margin-bottom: 0.5rem; }
+    .check { display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    .check::before { content: '○'; color: #666; }
+    .check.pass::before { content: '✓'; color: #10b981; }
+    .check.fail::before { content: '✗'; color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Password Strength</h1>
+    <input type="password" id="password" placeholder="Enter password to test...">
+    <div class="bar"><div class="bar-fill" id="bar"></div></div>
+    <p class="strength" id="strength">Enter a password</p>
+    <div class="checks" id="checks"></div>
+    <ul class="tips">
+      <li>Use at least 12 characters</li>
+      <li>Mix uppercase & lowercase</li>
+      <li>Add numbers and symbols</li>
+      <li>Avoid dictionary words</li>
+    </ul>
+  </div>
+  <script>
+    const password = document.getElementById('password');
+    const bar = document.getElementById('bar');
+    const strength = document.getElementById('strength');
+    const checks = document.getElementById('checks');
+
+    const rules = [
+      { test: p => p.length >= 8, name: 'At least 8 characters' },
+      { test: p => p.length >= 12, name: 'At least 12 characters' },
+      { test: p => /[a-z]/.test(p), name: 'Lowercase letter' },
+      { test: p => /[A-Z]/.test(p), name: 'Uppercase letter' },
+      { test: p => /[0-9]/.test(p), name: 'Number' },
+      { test: p => /[^a-zA-Z0-9]/.test(p), name: 'Special character' },
+      { test: p => !/(.)\1{2,}/.test(p), name: 'No repeated chars' }
+    ];
+
+    password.addEventListener('input', () => {
+      const p = password.value;
+      let score = 0;
+      
+      rules.forEach((rule, i) => {
+        const pass = rule.test(p);
+        if (pass) score++;
+        const existing = checks.children[i];
+        if (existing) {
+          existing.className = 'check ' + (pass ? 'pass' : 'fail');
+        } else {
+          const el = document.createElement('div');
+          el.className = 'check ' + (pass ? 'pass' : 'fail');
+          el.textContent = rule.name;
+          checks.appendChild(el);
+        }
+      });
+
+      const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#10b981'];
+      const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+      const idx = Math.min(Math.floor(score / 1.5), 4);
+      
+      bar.style.width = (score / rules.length * 100) + '%';
+      bar.style.background = colors[idx];
+      strength.textContent = p ? labels[idx] : 'Enter a password';
+      strength.style.color = colors[idx];
+    });
+  </script>
+</body>
+</html>

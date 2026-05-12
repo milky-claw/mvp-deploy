@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #1a1a1a; padding: 2rem; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+    h1 { text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem; color: #fff; }
+    input, textarea { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #333; border-radius: 8px; background: #252525; color: #fff; font-size: 1rem; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    button:hover { background: #059669; }
+    #qr-result { margin-top: 1.5rem; text-align: center; display: none; }
+    #qr-result img { max-width: 200px; border-radius: 8px; }
+    .error { color: #ef4444; text-align: center; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📱 QR Generator</h1>
+    <textarea id="text" placeholder="Enter URL or text..."></textarea>
+    <button onclick="generateQR()">Generate QR Code</button>
+    <div id="qr-result">
+      <img id="qr-img" alt="QR Code">
+      <p style="margin-top:0.5rem;font-size:0.875rem;color:#888;">Right-click to save</p>
+    </div>
+    <p id="error" class="error"></p>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    function generateQR() {
+      const text = document.getElementById('text').value.trim();
+      const result = document.getElementById('qr-result');
+      const img = document.getElementById('qr-img');
+      const error = document.getElementById('error');
+      
+      if (!text) { error.textContent = 'Please enter some text'; return; }
+      error.textContent = '';
+      
+      QRCode.toDataURL(text, { width: 200, margin: 2, color: { dark: '#000', light: '#fff' } })
+        .then(url => { img.src = url; result.style.display = 'block'; })
+        .catch(err => { error.textContent = 'Error generating QR'; result.style.display = 'none'; });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timestamp Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1e1e30 0%, #2d1b4e 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #12121c; border-radius: 16px; padding: 40px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+    h1 { color: #a855f7; font-size: 1.8rem; margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+    .input-group { margin-bottom: 20px; }
+    label { display: block; color: #aaa; margin-bottom: 8px; font-size: 0.85rem; }
+    input, button { width: 100%; padding: 14px; border-radius: 8px; font-size: 1rem; }
+    input { border: 2px solid #2a2a4a; background: #1e1e30; color: #fff; margin-bottom: 12px; }
+    input:focus { outline: none; border-color: #a855f7; }
+    .btn { background: #a855f7; color: #fff; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .btn:hover { background: #9333ea; }
+    .result { background: #1e1e30; padding: 16px; border-radius: 8px; margin-top: 20px; }
+    .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2a2a4a; }
+    .result-item:last-child { border-bottom: none; }
+    .result-label { color: #888; }
+    .result-value { color: #fff; font-family: monospace; }
+    .copy-btn { background: #22c55e; width: auto; padding: 6px 12px; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🕐 Timestamp Converter</h1>
+    <p class="subtitle">Convert between Unix timestamps and human dates</p>
+    
+    <div class="input-group">
+      <label>Unix Timestamp (seconds or milliseconds)</label>
+      <input type="text" id="timestamp" placeholder="e.g. 1773705600 or 1773705600000">
+      <button class="btn" onclick="fromTimestamp()">Convert from Timestamp</button>
+    </div>
+    
+    <div class="input-group">
+      <label>Or enter a date/time</label>
+      <input type="datetime-local" id="datetime">
+      <button class="btn" onclick="fromDatetime()">Convert from Date</button>
+    </div>
+    
+    <div class="result" id="result" style="display:none;">
+      <div class="result-item">
+        <span class="result-label">Unix (seconds)</span>
+        <span class="result-value" id="unix-sec"></span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">Unix (ms)</span>
+        <span class="result-value" id="unix-ms"></span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">UTC</span>
+        <span class="result-value" id="utc"></span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">Local</span>
+        <span class="result-value" id="local"></span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const timestampInput = document.getElementById('timestamp');
+    const datetimeInput = document.getElementById('datetime');
+    const resultDiv = document.getElementById('result');
+    
+    // Set current datetime
+    const now = new Date();
+    datetimeInput.value = now.toISOString().slice(0, 16);
+    
+    function showResult(date) {
+      document.getElementById('unix-sec').textContent = Math.floor(date.getTime() / 1000);
+      document.getElementById('unix-ms').textContent = date.getTime();
+      document.getElementById('utc').textContent = date.toUTCString();
+      document.getElementById('local').textContent = date.toLocaleString();
+      resultDiv.style.display = 'block';
+    }
+    
+    function fromTimestamp() {
+      let ts = timestampInput.value.trim();
+      if (!ts) return alert('Enter a timestamp!');
+      ts = parseInt(ts);
+      // Detect if ms or seconds (if < 10 billion, assume seconds)
+      if (ts < 10000000000) ts *= 1000;
+      const date = new Date(ts);
+      if (isNaN(date.getTime())) return alert('Invalid timestamp!');
+      showResult(date);
+    }
+    
+    function fromDatetime() {
+      const date = new Date(datetimeInput.value);
+      if (isNaN(date.getTime())) return alert('Invalid date!');
+      showResult(date);
+      timestampInput.value = Math.floor(date.getTime() / 1000);
+    }
+  </script>
+</body>
+</html>

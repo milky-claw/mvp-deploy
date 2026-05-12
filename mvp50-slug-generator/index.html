@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slug Generator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 40px 20px; background: #0d1b2a; color: #eee; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 600px; width: 100%; text-align: center; }
+        h1 { color: #e0e1dd; margin-bottom: 10px; }
+        .subtitle { color: #778da9; margin-bottom: 40px; }
+        .input-group { margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 18px; background: #1b263b; border: 2px solid #415a77; color: #fff; border-radius: 12px; font-size: 18px; text-align: center; transition: border-color 0.3s; }
+        input[type="text"]:focus { outline: none; border-color: #00b4d8; }
+        .options { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .option { display: flex; align-items: center; gap: 8px; color: #778da9; cursor: pointer; }
+        .option input { width: auto; }
+        .output { background: #1b263b; padding: 20px; border-radius: 12px; margin-top: 30px; }
+        .slug-output { font-size: 24px; color: #00b4d8; word-break: break-all; font-family: monospace; }
+        .copy-btn { background: #00b4d8; color: #0d1b2a; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .copy-btn:hover { background: #0096c7; }
+        .history { margin-top: 30px; text-align: left; }
+        .history h3 { color: #778da9; font-size: 14px; }
+        .history-item { background: #1b263b; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; font-family: monospace; cursor: pointer; }
+        .history-item:hover { background: #415a77; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Slug Generator</h1>
+        <p class="subtitle">Convert text to URL-friendly slugs</p>
+        <div class="input-group">
+            <input type="text" id="input" placeholder="Enter text to convert..." oninput="generate()">
+        </div>
+        <div class="options">
+            <label class="option"><input type="checkbox" id="lowercase" checked onchange="generate()"> lowercase</label>
+            <label class="option"><input type="checkbox" id="trim" checked onchange="generate()"> trim spaces</label>
+            <label class="option"><input type="checkbox" id="alphanumeric" checked onchange="generate()"> alphanumeric only</label>
+        </div>
+        <div class="output">
+            <div class="slug-output" id="output">-</div>
+            <button class="copy-btn" onclick="copy()">Copy to Clipboard</button>
+        </div>
+        <div class="history">
+            <h3>RECENT</h3>
+            <div id="history"></div>
+        </div>
+    </div>
+    <script>
+        const history = [];
+        function generate() {
+            let text = document.getElementById('input').value;
+            const lowercase = document.getElementById('lowercase').checked;
+            const trim = document.getElementById('trim').checked;
+            const alphanumeric = document.getElementById('alphanumeric').checked;
+            if (trim) text = text.trim().replace(/\s+/g, ' ');
+            if (alphanumeric) text = text.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/[\s_]+/g, '-');
+            else text = text.replace(/[\s_]+/g, '-').replace(/[^a-zA-Z0-9\s-]/g, '');
+            if (lowercase) text = text.toLowerCase();
+            text = text.replace(/^-+|-+$/g, '').replace(/-+/g, '-');
+            document.getElementById('output').textContent = text || '-';
+            if (text && !history.includes(text)) {
+                history.unshift(text);
+                if (history.length > 5) history.pop();
+                renderHistory();
+            }
+        }
+        function copy() {
+            const text = document.getElementById('output').textContent;
+            if (text && text !== '-') {
+                navigator.clipboard.writeText(text);
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy to Clipboard', 1500);
+            }
+        }
+        function renderHistory() {
+            document.getElementById('history').innerHTML = history.map(s => 
+                `<div class="history-item" onclick="useHistory('${s}')">${s}</div>`
+            ).join('');
+        }
+        function useHistory(s) {
+            document.getElementById('input').value = s;
+            generate();
+        }
+    </script>
+</body>
+</html>

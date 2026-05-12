@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength Checker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #16213e; padding: 40px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    h1 { font-size: 24px; margin-bottom: 30px; text-align: center; color: #e94560; }
+    input { width: 100%; padding: 16px; font-size: 18px; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; outline: none; transition: border-color 0.3s; }
+    input:focus { border-color: #e94560; }
+    .strength-meter { margin-top: 20px; height: 8px; background: #0f3460; border-radius: 4px; overflow: hidden; }
+    .strength-bar { height: 100%; width: 0; transition: width 0.3s, background 0.3s; border-radius: 4px; }
+    .strength-text { margin-top: 12px; text-align: center; font-size: 16px; font-weight: 600; }
+    .checks { margin-top: 24px; }
+    .check { padding: 8px 0; font-size: 14px; color: #888; display: flex; align-items: center; gap: 10px; }
+    .check.valid { color: #4ade80; }
+    .check.invalid { color: #f87171; }
+    .check::before { content: '○'; font-weight: bold; }
+    .check.valid::before { content: '✓'; }
+    .check.invalid::before { content: '✗'; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Password Strength</h1>
+    <input type="password" id="password" placeholder="Enter password to check...">
+    <div class="strength-meter"><div class="strength-bar" id="bar"></div></div>
+    <div class="strength-text" id="text">Enter a password</div>
+    <div class="checks">
+      <div class="check" id="check-length">At least 8 characters</div>
+      <div class="check" id="check-lower">Contains lowercase</div>
+      <div class="check" id="check-upper">Contains uppercase</div>
+      <div class="check" id="check-number">Contains number</div>
+      <div class="check" id="check-special">Contains special character</div>
+    </div>
+  </div>
+  <script>
+    const password = document.getElementById('password');
+    const bar = document.getElementById('bar');
+    const text = document.getElementById('text');
+    const checks = {
+      length: document.getElementById('check-length'),
+      lower: document.getElementById('check-lower'),
+      upper: document.getElementById('check-upper'),
+      number: document.getElementById('check-number'),
+      special: document.getElementById('check-special')
+    };
+    
+    password.addEventListener('input', () => {
+      const val = password.value;
+      const results = {
+        length: val.length >= 8,
+        lower: /[a-z]/.test(val),
+        upper: /[A-Z]/.test(val),
+        number: /[0-9]/.test(val),
+        special: /[^A-Za-z0-9]/.test(val)
+      };
+      
+      let score = Object.values(results).filter(Boolean).length;
+      if (val.length === 0) score = 0;
+      
+      const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
+      const texts = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+      
+      bar.style.width = (score * 20) + '%';
+      bar.style.background = colors[Math.max(0, score - 1)];
+      text.textContent = val.length === 0 ? 'Enter a password' : texts[Math.max(0, score - 1)];
+      text.style.color = colors[Math.max(0, score - 1)];
+      
+      Object.keys(results).forEach(key => {
+        checks[key].classList.toggle('valid', results[key]);
+        checks[key].classList.toggle('invalid', val.length > 0 && !results[key]);
+      });
+    });
+  </script>
+</body>
+</html>

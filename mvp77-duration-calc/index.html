@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duration Calculator - Time Between Dates</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #ff6b9d; }
+    .card { background: #16213e; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; margin-bottom: 8px; color: #aaa; }
+    .input-group input { width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px; background: #0f0f23; color: #fff; font-size: 16px; }
+    .input-group input:focus { border-color: #ff6b9d; outline: none; }
+    .btn { width: 100%; background: #ff6b9d; color: #1a1a2e; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
+    .btn:hover { background: #ff5588; }
+    .result { display: none; }
+    .result.show { display: block; }
+    .result-card { background: linear-gradient(135deg, #16213e 0%, #0f0f23 100%); border-radius: 12px; padding: 25px; text-align: center; }
+    .result-card h3 { color: #ff6b9d; margin-bottom: 20px; }
+    .duration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .duration-item { background: #1a1a2e; padding: 15px; border-radius: 8px; text-align: center; }
+    .duration-item .number { font-size: 28px; font-weight: bold; color: #00d9ff; }
+    .duration-item .label { font-size: 12px; color: #888; margin-top: 5px; }
+    .total { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+    .total .number { font-size: 36px; color: #ff6b9d; }
+    .presets { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+    .preset-btn { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; }
+    .preset-btn:hover { background: #444; }
+    .quick-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏱️ Duration Calculator</h1>
+    
+    <div class="card">
+      <div class="quick-dates">
+        <div class="input-group">
+          <label>Start Date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="input-group">
+          <label>End Date</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+      <div class="presets">
+        <button class="preset-btn" onclick="setPreset('today')">Today</button>
+        <button class="preset-btn" onclick="setPreset('tomorrow')">Tomorrow</button>
+        <button class="preset-btn" onclick="setPreset('week')">+1 Week</button>
+        <button class="preset-btn" onclick="setPreset('month')">+1 Month</button>
+        <button class="preset-btn" onclick="setPreset('year')">+1 Year</button>
+      </div>
+    </div>
+
+    <button class="btn" onclick="calculate()">Calculate Duration</button>
+
+    <div class="result" id="result">
+      <div class="result-card">
+        <h3>Time Between Dates</h3>
+        <div class="duration-grid">
+          <div class="duration-item">
+            <div class="number" id="days">0</div>
+            <div class="label">Days</div>
+          </div>
+          <div class="duration-item">
+            <div class="number" id="hours">0</div>
+            <div class="label">Hours</div>
+          </div>
+          <div class="duration-item">
+            <div class="number" id="minutes">0</div>
+            <div class="label">Minutes</div>
+          </div>
+        </div>
+        <div class="total">
+          <div class="label">Total Hours</div>
+          <div class="number" id="totalHours">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set default dates
+    const today = new Date();
+    document.getElementById('startDate').value = formatDate(today);
+    document.getElementById('endDate').value = formatDate(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000));
+
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+
+    function setPreset(preset) {
+      const now = new Date();
+      let endDate;
+      
+      switch(preset) {
+        case 'today':
+          endDate = now;
+          break;
+        case 'tomorrow':
+          endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          break;
+        case 'week':
+          endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+          break;
+        case 'year':
+          endDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+          break;
+      }
+      
+      document.getElementById('endDate').value = formatDate(endDate);
+    }
+
+    function calculate() {
+      const start = new Date(document.getElementById('startDate').value);
+      const end = new Date(document.getElementById('endDate').value);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        alert('Please select both dates');
+        return;
+      }
+
+      const diffMs = Math.abs(end - start);
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const days = Math.floor(diffMs / 86400000);
+      const hours = Math.floor((diffMs % 86400000) / 3600000);
+      const minutes = Math.floor((diffMs % 3600000) / 60000);
+
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = hours;
+      document.getElementById('minutes').textContent = minutes;
+      document.getElementById('totalHours').textContent = diffHours;
+      
+      document.getElementById('result').classList.add('show');
+    }
+  </script>
+</body>
+</html>

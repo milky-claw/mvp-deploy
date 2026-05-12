@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YAML Parser</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d4ff; }
+    .container { display: grid; gap: 15px; }
+    label { font-weight: bold; color: #00d4ff; }
+    textarea { width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px; background: #16213e; color: #fff; font-family: monospace; font-size: 14px; min-height: 200px; }
+    .output { background: #16213e; padding: 15px; border-radius: 8px; min-height: 150px; font-family: monospace; white-space: pre-wrap; overflow-x: auto; }
+    .error { color: #ff6b6b; background: rgba(255,107,107,0.1); padding: 10px; border-radius: 8px; }
+    .success { color: #28a745; }
+    button { padding: 10px 20px; background: #00d4ff; color: #1a1a2e; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #00b8e6; }
+  </style>
+</head>
+<body>
+  <h1>📄 YAML Parser</h1>
+  <div class="container">
+    <div>
+      <label>Input YAML</label>
+      <textarea id="yamlInput" placeholder="name: John Doe
+age: 30
+skills:
+  - JavaScript
+  - Python">name: John Doe
+age: 30
+skills:
+  - JavaScript
+  - Python
+contact:
+  email: john@example.com
+  phone: "+1-555-0123"</textarea>
+    </div>
+    <button onclick="parse()">Parse YAML</button>
+    <div>
+      <label>Output (JSON)</label>
+      <div class="output" id="output">Click "Parse YAML" to convert...</div>
+    </div>
+  </div>
+  <script>
+    // Simple YAML parser (supports basic YAML)
+    function parseYAML(str) {
+      const lines = str.split('\n');
+      let result = {};
+      let stack = [{indent: -1, obj: result}];
+      
+      for (let line of lines) {
+        if (!line.trim() || line.trim().startsWith('#')) continue;
+        
+        let indent = line.search(/\S/);
+        let content = line.trim();
+        
+        // Find parent level
+        while (stack.length > 1 && stack[stack.length-1].indent >= indent) {
+          stack.pop();
+        }
+        
+        let parent = stack[stack.length-1].obj;
+        
+        // List item
+        if (content.startsWith('- ')) {
+          let value = content.substring(2).trim();
+          if (!Array.isArray(parent[Object.keys(parent).pop()])) {
+            // will be handled by array detection
+          }
+          // Simple list handling
+          continue;
+        }
+        
+        // Key-value
+        let colonIdx = content.indexOf(':');
+        if (colonIdx > -1) {
+          let key = content.substring(0, colonIdx).trim();
+          let value = content.substring(colonIdx + 1).trim();
+          
+          if (!value) {
+            // Object start
+            parent[key] = {};
+            stack.push({indent: indent, obj: parent[key]});
+          } else {
+            // Value
+            parent[key] = parseValue(value);
+          }
+        }
+      }
+      return result;
+    }
+    
+    function parseValue(v) {
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+      if (v === 'null' || v === '~') return null;
+      if (!isNaN(v)) return Number(v);
+      return v.replace(/^["']|["']$/g, '');
+    }
+    
+    function parse() {
+      const input = document.getElementById('yamlInput').value;
+      const output = document.getElementById('output');
+      
+      try {
+        // Use a more robust approach - try native first, fallback to simple parser
+        let obj;
+        try {
+          // Quick and dirty YAML-like parser for common cases
+          obj = simpleYAML(input);
+        } catch(e) {
+          throw new Error(e.message);
+        }
+        
+        output.textContent = JSON.stringify(obj, null, 2);
+        output.className = 'output success';
+      } catch (e) {
+        output.innerHTML = `<div class="error">${e.message}</div>`;
+      }
+    }
+    
+    function simpleYAML(yaml) {
+      const lines = yaml.split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+      let obj = {};
+      let current = {};
+      let stack = [{obj: obj, indent: -1}];
+      
+      for (let line of lines) {
+        let indent = line.match(/\S/)?.[0]?.length ?? 0;
+        let content = line.trim();
+        
+        // Pop stack
+        while (stack.length > 1 && stack[stack.length-1].indent >= indent) {
+          stack.pop();
+        }
+        current = stack[stack.length-1].obj;
+        
+        // List item
+        if (content.startsWith('- ')) {
+          let val = content.substring(2).trim();
+          let lastKey = Object.keys(current).pop();
+          if (lastKey && Array.isArray(current[lastKey])) {
+            current[lastKey].push(parseValue(val));
+          }
+          continue;
+        }
+        
+        // Key-value
+        let [key, ...rest] = content.split(':');
+        key = key.trim();
+        let val = rest.join(':').trim();
+        
+        if (!val) {
+          current[key] = [];
+          stack.push({obj: current[key], indent: indent});
+        } else {
+          current[key] = parseValue(val);
+        }
+      }
+      return obj;
+    }
+  </script>
+</body>
+</html>

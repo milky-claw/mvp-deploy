@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #00d9ff; }
+    textarea { width: 100%; height: 120px; background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 14px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .section { margin: 20px 0; }
+    .label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+    .output { background: #16213e; border: 1px solid #0f3460; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 14px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+    .error { color: #ff6b6b; }
+    .valid { color: #51cf66; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+    .badge-header { background: #e9ce00; color: #000; }
+    .badge-payload { background: #00d9ff; color: #000; }
+    .badge-sig { background: #51cf66; color: #000; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 JWT Decoder</h1>
+    <div class="section">
+      <label class="label">Paste JWT Token</label>
+      <textarea id="jwtInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"></textarea>
+    </div>
+    <div class="section">
+      <label class="label">Decoded</label>
+      <div id="output" class="output">Enter a JWT to decode...</div>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('jwtInput');
+    const output = document.getElementById('output');
+    
+    function decodeJWT(token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return { error: 'Invalid JWT format: must have 3 parts' };
+        
+        const decode = (str) => {
+          const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+          const json = atob(base64);
+          return JSON.parse(json);
+        };
+        
+        const header = decode(parts[0]);
+        const payload = decode(parts[1]);
+        
+        let html = '';
+        html += `<span class="badge badge-header">HEADER</span>\n`;
+        html += JSON.stringify(header, null, 2) + '\n\n';
+        html += `<span class="badge badge-payload">PAYLOAD</span>\n`;
+        html += JSON.stringify(payload, null, 2) + '\n\n';
+        html += `<span class="badge badge-sig">SIGNATURE</span>\n`;
+        html += parts[2].substring(0, 50) + '...';
+        
+        if (payload.exp) {
+          const expDate = new Date(payload.exp * 1000);
+          const now = new Date();
+          const isExpired = now > expDate;
+          html += `\n\n⏱ Expires: ${expDate.toLocaleString()} ${isExpired ? '<span class="error">(EXPIRED)</span>' : '<span class="valid">(VALID)</span>'}`;
+        }
+        
+        if (payload.iat) {
+          const iatDate = new Date(payload.iat * 1000);
+          html += `\n📅 Issued: ${iatDate.toLocaleString()}`;
+        }
+        
+        output.innerHTML = html;
+      } catch (e) {
+        output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+      }
+    }
+    
+    input.addEventListener('input', () => {
+      if (input.value.trim()) decodeJWT(input.value.trim());
+      else output.textContent = 'Enter a JWT to decode...';
+    });
+  </script>
+</body>
+</html>

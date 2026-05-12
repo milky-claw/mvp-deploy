@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Path Query Tool</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #a855f7; margin-bottom: 1.5rem; }
+        .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .panel { display: flex; flex-direction: column; }
+        .panel label { color: #aaa; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        textarea { flex: 1; min-height: 300px; background: #252540; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 1rem; font-family: monospace; font-size: 0.9rem; resize: vertical; }
+        .query-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .query-row input { flex: 1; padding: 0.7rem; background: #252540; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: monospace; }
+        .query-row button { padding: 0.7rem 1.5rem; background: #a855f7; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .result { background: #252540; padding: 1rem; border-radius: 8px; min-height: 150px; font-family: monospace; white-space: pre-wrap; overflow: auto; }
+        .error { color: #ff6b6b; }
+        .sample-btn { margin-left: 0.5rem; padding: 0.5rem 1rem; background: #4a4a6a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 JSON Path Query Tool</h1>
+        <div class="panels">
+            <div class="panel">
+                <label>Input JSON</label>
+                <textarea id="jsonInput" placeholder='{"users": [{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]}'>{
+  "store": {
+    "book": [
+      { "category": "fiction", "author": "J.R.R. Tolkien", "title": "The Lord of the Rings" },
+      { "category": "fiction", "author": "J.K. Rowling", "title": "Harry Potter" },
+      { "category": "programming", "author": "Jane Doe", "title": "JS Guide" }
+    ],
+    "bicycle": { "color": "red", "price": 19.95 }
+  }
+}</textarea>
+            </div>
+            <div class="panel">
+                <label>Result</label>
+                <div class="result" id="result">Results will appear here...</div>
+            </div>
+        </div>
+        <div class="query-row">
+            <input type="text" id="path" placeholder="e.g., store.book[0].title or $.store.book[*].author" value="store.book[*].title">
+            <button onclick="query()">Query</button>
+            <button class="sample-btn" onclick="sample()">Load Sample</button>
+        </div>
+    </div>
+    <script>
+        function query() {
+            const jsonText = document.getElementById('jsonInput').value;
+            const path = document.getElementById('path').value;
+            const resultEl = document.getElementById('result');
+            
+            try {
+                const data = JSON.parse(jsonText);
+                const result = evalPath(data, path);
+                resultEl.textContent = JSON.stringify(result, null, 2);
+                resultEl.classList.remove('error');
+            } catch (e) {
+                resultEl.textContent = 'Error: ' + e.message;
+                resultEl.classList.add('error');
+            }
+        }
+        
+        function evalPath(obj, path) {
+            // Simple JSONPath implementation
+            let o = obj;
+            let p = path.replace(/^\$\.?/, '').split(/[\.\[\]]+/).filter(Boolean);
+            
+            for (let part of p) {
+                if (part === '*') {
+                    if (Array.isArray(o)) o = o.map(x => x);
+                    else if (typeof o === 'object') o = Object.values(o);
+                    else return undefined;
+                } else if (!isNaN(part)) {
+                    o = o[parseInt(part)];
+                } else {
+                    o = o[part];
+                }
+                if (o === undefined) break;
+            }
+            return o;
+        }
+        
+        function sample() {
+            document.getElementById('jsonInput').value = JSON.stringify({
+                "store": {
+                    "book": [
+                        { "category": "fiction", "author": "J.R.R. Tolkien", "title": "The Lord of the Rings" },
+                        { "category": "fiction", "author": "J.K. Rowling", "title": "Harry Potter" },
+                        { "category": "programming", "author": "Jane Doe", "title": "JS Guide" }
+                    ],
+                    "bicycle": { "color": "red", "price": 19.95 }
+                }
+            }, null, 2);
+            query();
+        }
+        
+        query(); // Run on load
+    </script>
+</body>
+</html>

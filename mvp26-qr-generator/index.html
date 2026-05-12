@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📱 QR Code Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f0c29; color: #fff; padding: 2rem; }
+    .container { text-align: center; background: linear-gradient(135deg, #302b63, #24243e); padding: 2rem; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); max-width: 500px; width: 100%; }
+    h1 { margin-bottom: 1.5rem; background: linear-gradient(90deg, #00d9ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    textarea { width: 100%; height: 100px; padding: 1rem; border: 2px solid #444; border-radius: 8px; background: #1a1a2e; color: #fff; font-size: 1rem; resize: none; margin-bottom: 1rem; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .size-select { margin-bottom: 1rem; }
+    select { padding: 0.5rem 1rem; border-radius: 6px; border: 2px solid #444; background: #1a1a2e; color: #fff; font-size: 1rem; }
+    .qr-output { margin: 1.5rem 0; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+    .qr-output img { max-width: 100%; border-radius: 8px; background: #fff; padding: 1rem; }
+    .btn-group { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    button { padding: 0.75rem 1.5rem; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: transform 0.1s, opacity 0.2s; }
+    button:active { transform: scale(0.96); }
+    .btn-generate { background: linear-gradient(90deg, #00d9ff, #00ff88); color: #0f0c29; }
+    .btn-download { background: #ff6b6b; color: #fff; }
+    .btn-copy { background: #4ecdc4; color: #0f0c29; }
+    .error { color: #ff6b6b; margin-top: 0.5rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📱 QR Code Generator</h1>
+    
+    <textarea id="qrText" placeholder="Enter text or URL..."></textarea>
+    
+    <div class="size-select">
+      <select id="size">
+        <option value="150">150 x 150</option>
+        <option value="200" selected>200 x 200</option>
+        <option value="300">300 x 300</option>
+        <option value="400">400 x 400</option>
+      </select>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn-generate" id="generateBtn">Generate</button>
+      <button class="btn-download" id="downloadBtn" disabled>Download PNG</button>
+    </div>
+    
+    <div class="qr-output" id="qrOutput"></div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    const qrText = document.getElementById('qrText');
+    const size = document.getElementById('size');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const qrOutput = document.getElementById('qrOutput');
+    const error = document.getElementById('error');
+    
+    let currentUrl = '';
+    let currentDataUrl = '';
+
+    function generateQR() {
+      const text = qrText.value.trim();
+      if (!text) {
+        error.textContent = 'Please enter some text or URL';
+        return;
+      }
+      error.textContent = '';
+      
+      const s = size.value;
+      currentUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${s}x${s}&data=${encodeURIComponent(text)}`;
+      
+      qrOutput.innerHTML = `<img src="${currentUrl}" alt="QR Code">`;
+      downloadBtn.disabled = false;
+      currentDataUrl = currentUrl;
+    }
+
+    function downloadQR() {
+      if (!currentUrl) return;
+      
+      const link = document.createElement('a');
+      link.href = currentUrl;
+      link.download = 'qrcode.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    generateBtn.addEventListener('click', generateQR);
+    downloadBtn.addEventListener('click', downloadQR);
+    
+    qrText.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        generateQR();
+      }
+    });
+  </script>
+</body>
+</html>

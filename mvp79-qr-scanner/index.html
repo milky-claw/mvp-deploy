@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Scanner - Scan QR Codes via Webcam</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #00ff88; }
+    .container { max-width: 500px; width: 100%; }
+    #video-container { width: 100%; aspect-ratio: 1; background: #1a1a1a; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; position: relative; }
+    #video { width: 100%; height: 100%; object-fit: cover; }
+    #canvas { display: none; }
+    .btn { background: #00ff88; color: #0f0f0f; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 0.5rem; }
+    .btn:hover { background: #00dd77; }
+    .btn.secondary { background: #333; color: #fff; }
+    .btn.secondary:hover { background: #444; }
+    #result { background: #1a1a1a; padding: 1rem; border-radius: 8px; margin-top: 1rem; word-break: break-all; }
+    #result:empty { display: none; }
+    .label { color: #888; font-size: 0.75rem; margin-bottom: 0.25rem; }
+    .error { color: #ff4444; }
+    .success { color: #00ff88; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📷 QR Scanner</h1>
+    <div id="video-container">
+      <video id="video" playsinline></video>
+    </div>
+    <canvas id="canvas"></canvas>
+    <button class="btn" id="start-btn">Start Camera</button>
+    <button class="btn secondary" id="stop-btn" style="display:none;">Stop Camera</button>
+    <div id="result"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const resultDiv = document.getElementById('result');
+    let streaming = false;
+    let animationId = null;
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+        video.play();
+        streaming = true;
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'block';
+        resultDiv.innerHTML = '';
+        scan();
+      } catch (e) {
+        resultDiv.innerHTML = `<div class="error">Camera error: ${e.message}</div>`;
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      streaming = false;
+      if (animationId) cancelAnimationFrame(animationId);
+      video.srcObject?.getTracks().forEach(t => t.stop());
+      startBtn.style.display = 'block';
+      stopBtn.style.display = 'none';
+    });
+
+    function scan() {
+      if (!streaming) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          resultDiv.innerHTML = `<div class="label">Scanned:</div><div class="success">${code.data}</div>`;
+          streaming = false;
+          if (animationId) cancelAnimationFrame(animationId);
+          video.srcObject?.getTracks().forEach(t => t.stop());
+          startBtn.style.display = 'block';
+          stopBtn.style.display = 'none';
+          return;
+        }
+      }
+      animationId = requestAnimationFrame(scan);
+    }
+  </script>
+</body>
+</html>

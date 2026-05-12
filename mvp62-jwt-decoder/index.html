@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #ff6b9d; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    textarea { width: 100%; padding: 0.75rem; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; font-family: monospace; font-size: 14px; min-height: 80px; resize: vertical; }
+    .result-section { background: #0f3460; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    .result-section h3 { color: #ff6b9d; margin-bottom: 0.5rem; font-size: 14px; text-transform: uppercase; }
+    pre { background: #1a1a2e; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+    .error { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎫 JWT Decoder</h1>
+    <div class="card">
+      <label>JWT Token</label>
+      <textarea id="jwtInput" placeholder="Paste your JWT token here..."></textarea>
+    </div>
+    <div class="result-section" id="headerSection" style="display:none;">
+      <h3>Header</h3>
+      <pre id="headerOutput"></pre>
+    </div>
+    <div class="result-section" id="payloadSection" style="display:none;">
+      <h3>Payload</h3>
+      <pre id="payloadOutput"></pre>
+    </div>
+    <div class="result-section" id="signatureSection" style="display:none;">
+      <h3>Signature</h3>
+      <pre id="signatureOutput"></pre>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('jwtInput');
+    
+    function decodeJWT() {
+      const token = input.value.trim();
+      if (!token) {
+        hideResults();
+        return;
+      }
+      
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid JWT format');
+        }
+        
+        const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const signature = parts[2];
+        
+        document.getElementById('headerOutput').textContent = JSON.stringify(header, null, 2);
+        document.getElementById('payloadOutput').textContent = JSON.stringify(payload, null, 2);
+        document.getElementById('signatureOutput').textContent = signature;
+        
+        showResults();
+      } catch (e) {
+        hideResults();
+      }
+    }
+    
+    function hideResults() {
+      document.getElementById('headerSection').style.display = 'none';
+      document.getElementById('payloadSection').style.display = 'none';
+      document.getElementById('signatureSection').style.display = 'none';
+    }
+    
+    function showResults() {
+      document.getElementById('headerSection').style.display = 'block';
+      document.getElementById('payloadSection').style.display = 'block';
+      document.getElementById('signatureSection').style.display = 'block';
+    }
+    
+    input.addEventListener('input', decodeJWT);
+    
+    // Expose for testing
+    window.decodeJWT = (token) => {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      return {
+        header: JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'))),
+        payload: JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+      };
+    };
+  </script>
+</body>
+</html>

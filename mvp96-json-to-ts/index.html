@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON → TypeScript</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #845ef7; }
+    .row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 300px; }
+    textarea { width: 100%; height: 300px; background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 12px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 13px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #845ef7; }
+    .label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+    .output { background: #16213e; border: 1px solid #0f3460; padding: 12px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 13px; white-space: pre-wrap; min-height: 300px; overflow: auto; color: #51cf66; }
+    .buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button { background: #845ef7; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+    button:hover { opacity: 0.8; }
+    button.secondary { background: #0f3460; }
+    input[type="text"] { background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 10px; border-radius: 6px; font-size: 14px; width: 200px; }
+    input[type="text"]:focus { outline: none; border-color: #845ef7; }
+    .error { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔷 JSON → TypeScript</h1>
+    <div class="row">
+      <div class="col">
+        <label class="label">JSON Input</label>
+        <textarea id="input" placeholder='{"id": 1, "name": "John", "email": "john@example.com", "active": true, "tags": ["dev", "admin"], "meta": {"created": "2024-01-01"}}'></textarea>
+      </div>
+      <div class="col">
+        <label class="label">TypeScript Output</label>
+        <div id="output" class="output"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="convert()">Convert</button>
+      <input type="text" id="rootName" placeholder="RootName" value="Root">
+      <button class="secondary" onclick="copy()">Copy</button>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const rootNameInput = document.getElementById('rootName');
+    
+    const typeCache = new Map();
+    
+    function getTypeName(name) {
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    
+    function inferType(value, name) {
+      if (value === null) return 'any';
+      if (Array.isArray(value)) {
+        if (value.length === 0) return 'any[]';
+        const itemType = inferType(value[0], name + 'Item');
+        return `${itemType}[]`;
+      }
+      switch (typeof value) {
+        case 'string': return 'string';
+        case 'number': return Number.isInteger(value) ? 'number' : 'number';
+        case 'boolean': return 'boolean';
+        case 'object': return getTypeName(name);
+        default: return 'any';
+      }
+    }
+    
+    function convertObject(obj, name, indent = 0) {
+      const spaces = '  '.repeat(indent);
+      const typeName = getTypeName(name);
+      
+      if (typeCache.has(typeName)) {
+        return typeName;
+      }
+      
+      const fields = Object.entries(obj).map(([key, value]) => {
+        const type = inferType(value, key);
+        return `${spaces}  ${key}${key.includes(' ') || key.includes('-') ? '?' : ''}: ${type};`;
+      }).join('\n');
+      
+      typeCache.set(typeName, `interface ${typeName} {\n${fields}\n${spaces}}`);
+      return typeName;
+    }
+    
+    function convert() {
+      typeCache.clear();
+      const json = input.value.trim();
+      
+      if (!json) {
+        output.textContent = 'Enter JSON to convert...';
+        return;
+      }
+      
+      try {
+        const obj = JSON.parse(json);
+        const rootName = rootNameInput.value.trim() || 'Root';
+        
+        // First pass: collect all nested types
+        function collectTypes(value, name) {
+          if (value === null || typeof value !== 'object') return;
+          if (Array.isArray(value) && value.length > 0) {
+            collectTypes(value[0], name + 'Item');
+            return;
+          }
+          Object.values(value).forEach(v => collectTypes(v, name));
+        }
+        
+        collectTypes(obj, rootName);
+        
+        // Second pass: build types
+        function buildTypes(value, name) {
+          if (value === null || typeof value !== 'object') return;
+          if (Array.isArray(value)) {
+            if (value.length > 0) buildTypes(value[0], name + 'Item');
+            return;
+          }
+          convertObject(value, name);
+          Object.values(value).forEach(v => buildTypes(v, name));
+        }
+        
+        buildTypes(obj, rootName);
+        
+        // Output
+        const rootType = inferType(obj, rootName);
+        let result = `export type ${rootName} = ${rootType};\n\n`;
+        
+        // Output cached types
+        typeCache.forEach((type, name) => {
+          result += type + '\n\n';
+        });
+        
+        output.textContent = result.trim();
+      } catch (e) {
+        output.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+      }
+    }
+    
+    function copy() {
+      navigator.clipboard.writeText(output.textContent);
+    }
+    
+    input.addEventListener('input', convert);
+    rootNameInput.addEventListener('input', convert);
+  </script>
+</body>
+</html>

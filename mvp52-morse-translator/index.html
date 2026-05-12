@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morse Code Translator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; color: #00d4ff; margin-bottom: 10px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+    .converter { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .converter { grid-template-columns: 1fr; } }
+    .box { background: #16213e; padding: 20px; border-radius: 12px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #00d4ff; }
+    textarea, input { width: 100%; background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 12px; color: #fff; font-family: monospace; font-size: 14px; resize: vertical; }
+    textarea { min-height: 200px; }
+    textarea:focus, input:focus { outline: none; border-color: #00d4ff; }
+    .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+    button { background: #00d4ff; color: #1a1a2e; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #00b8e6; }
+    button.secondary { background: #333; color: #fff; }
+    .reference { margin-top: 30px; background: #16213e; padding: 20px; border-radius: 12px; }
+    .reference h3 { color: #00d4ff; margin-top: 0; }
+    .morse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; font-family: monospace; font-size: 12px; }
+    .morse-item { background: #0f0f23; padding: 6px; border-radius: 4px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📡 Morse Code Translator</h1>
+    <p class="subtitle">Convert text to Morse code and vice versa</p>
+    
+    <div class="converter">
+      <div class="box">
+        <label>Text</label>
+        <textarea id="text" placeholder="Enter text to convert...">Hello World</textarea>
+        <div class="btn-row">
+          <button onclick="toMorse()">To Morse →</button>
+          <button class="secondary" onclick="copyText()">Copy</button>
+        </div>
+      </div>
+      <div class="box">
+        <label>Morse Code</label>
+        <textarea id="morse" placeholder="Enter morse code (. and -)...">.... . .-.. .-.. --- / .-- --- .-. .-.. -..</textarea>
+        <div class="btn-row">
+          <button onclick="toText()">← To Text</button>
+          <button class="secondary" onclick="copyMorse()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="reference">
+      <h3>Morse Code Reference</h3>
+      <div class="morse-grid">
+        <div class="morse-item">A .-</div>
+        <div class="morse-item">B -...</div>
+        <div class="morse-item">C -.-.</div>
+        <div class="morse-item">D -..</div>
+        <div class="morse-item">E .</div>
+        <div class="morse-item">F ..-.</div>
+        <div class="morse-item">G --.</div>
+        <div class="morse-item">H ....</div>
+        <div class="morse-item">I ..</div>
+        <div class="morse-item">J .---</div>
+        <div class="morse-item">K -.-</div>
+        <div class="morse-item">L .-..</div>
+        <div class="morse-item">M --</div>
+        <div class="morse-item">N -.</div>
+        <div class="morse-item">O ---</div>
+        <div class="morse-item">P .--.</div>
+        <div class="morse-item">Q --.-</div>
+        <div class="morse-item">R .-.</div>
+        <div class="morse-item">S ...</div>
+        <div class="morse-item">T -</div>
+        <div class="morse-item">U ..-</div>
+        <div class="morse-item">V ...-</div>
+        <div class="morse-item">W .--</div>
+        <div class="morse-item">X -..-</div>
+        <div class="morse-item">Y -.--</div>
+        <div class="morse-item">Z --..</div>
+        <div class="morse-item">0 -----</div>
+        <div class="morse-item">1 .----</div>
+        <div class="morse-item">2 ..---</div>
+        <div class="morse-item">3 ...--</div>
+        <div class="morse-item">4 ....-</div>
+        <div class="morse-item">5 .....</div>
+        <div class="morse-item">6 -....</div>
+        <div class="morse-item">7 --...</div>
+        <div class="morse-item">8 ---..</div>
+        <div class="morse-item">9 ----.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MORSE_CODE = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+      '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+      '8': '---..', '9': '----.', ' ': '/'
+    };
+
+    const REVERSE_MORSE = Object.fromEntries(Object.entries(MORSE_CODE).map(([k, v]) => [v, k]));
+
+    function textToMorse(text) {
+      return text.toUpperCase().split('').map(char => MORSE_CODE[char] || '').join(' ');
+    }
+
+    function morseToText(morse) {
+      return morse.split(' ').map(code => REVERSE_MORSE[code] || '').join('');
+    }
+
+    function toMorse() {
+      const text = document.getElementById('text').value;
+      document.getElementById('morse').value = textToMorse(text);
+    }
+
+    function toText() {
+      const morse = document.getElementById('morse').value;
+      document.getElementById('text').value = morseToText(morse);
+    }
+
+    function copyText() {
+      navigator.clipboard.writeText(document.getElementById('text').value);
+    }
+
+    function copyMorse() {
+      navigator.clipboard.writeText(document.getElementById('morse').value);
+    }
+
+    // Auto-convert on typing
+    document.getElementById('text').addEventListener('input', toMorse);
+  </script>
+</body>
+</html>

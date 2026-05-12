@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Sorter</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #ff6b6b; }
+    .container { display: flex; gap: 20px; flex-wrap: wrap; }
+    .box { flex: 1; min-width: 300px; }
+    textarea { width: 100%; height: 300px; background: #16213e; color: #fff; border: 1px solid #0f3460; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 14px; }
+    .buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { background: #0f3460; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #e94560; }
+    button.primary { background: #ff6b6b; color: #1a1a2e; }
+    .options { background: #16213e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .options label { margin-right: 20px; cursor: pointer; }
+    .status { padding: 10px; border-radius: 5px; margin-top: 10px; }
+    .status.error { background: #ff4757; }
+    .status.success { background: #2ed573; color: #1a1a2e; }
+    .info { background: #3742fa; padding: 10px; border-radius: 5px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>🔤 Text Sorter</h1>
+  <div class="options">
+    <strong>Sort by:</strong>
+    <label><input type="radio" name="sortBy" value="alpha" checked> Alphabetical</label>
+    <label><input type="radio" name="sortBy" value="length"> By Length</label>
+    <label><input type="radio" name="sortBy" value="reverse"> Reverse</label>
+    <label><input type="radio" name="sortBy" value="random"> Random</label>
+    <br><br>
+    <label><input type="checkbox" id="unique" checked> Remove duplicates</label>
+    <label><input type="checkbox" id="caseInsensitive" checked> Case insensitive</label>
+  </div>
+  <div class="container">
+    <div class="box">
+      <h3>Input (one per line)</h3>
+      <textarea id="input" placeholder="apple&#10;Banana&#10;cherry&#10;Apple"></textarea>
+    </div>
+    <div class="box">
+      <h3>Output</h3>
+      <textarea id="output" readonly></textarea>
+    </div>
+  </div>
+  <div class="buttons">
+    <button class="primary" onclick="sort()">Sort</button>
+    <button onclick="shuffle()">Shuffle</button>
+    <button onclick="clearAll()">Clear</button>
+    <button onclick="copy()">Copy</button>
+  </div>
+  <div id="status"></div>
+  <div class="info">💡 Tip: Each line will be treated as a separate item</div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+
+    function showStatus(msg, isError = true) {
+      status.textContent = msg;
+      status.className = 'status ' + (isError ? 'error' : 'success');
+    }
+
+    function sort() {
+      const lines = input.value.split('\n').filter(l => l.trim());
+      const sortBy = document.querySelector('input[name="sortBy"]:checked').value;
+      const unique = document.getElementById('unique').checked;
+      const caseInsensitive = document.getElementById('caseInsensitive').checked;
+
+      if (unique) {
+        if (caseInsensitive) {
+          lines = [...new Set(lines.map(l => l.toLowerCase()))].map(l => {
+            const orig = input.value.split('\n').find(o => o.toLowerCase() === l);
+            return orig || l;
+          });
+        } else {
+          lines = [...new Set(lines)];
+        }
+      }
+
+      switch (sortBy) {
+        case 'alpha':
+          lines.sort((a, b) => caseInsensitive ? a.toLowerCase().localeCompare(b.toLowerCase()) : a.localeCompare(b));
+          break;
+        case 'length':
+          lines.sort((a, b) => a.length - b.length);
+          break;
+        case 'reverse':
+          lines.reverse();
+          break;
+        case 'random':
+          lines.sort(() => Math.random() - 0.5);
+          break;
+      }
+
+      output.value = lines.join('\n');
+      showStatus(`✅ Sorted ${lines.length} items`, false);
+    }
+
+    function shuffle() {
+      const lines = input.value.split('\n').filter(l => l.trim());
+      lines.sort(() => Math.random() - 0.5);
+      output.value = lines.join('\n');
+      showStatus('🔀 Shuffled!', false);
+    }
+
+    function clearAll() {
+      input.value = '';
+      output.value = '';
+      status.textContent = '';
+    }
+
+    function copy() {
+      output.select();
+      document.execCommand('copy');
+      showStatus('📋 Copied!', false);
+    }
+
+    // Expose for tests
+    window.textSorter = {
+      sortAlpha: (arr) => arr.sort((a, b) => a.localeCompare(b)),
+      sortReverse: (arr) => arr.reverse(),
+      unique: (arr) => [...new Set(arr)],
+      shuffle: (arr) => arr.sort(() => Math.random() - 0.5)
+    };
+  </script>
+</body>
+</html>

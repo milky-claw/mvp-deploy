@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Path Query Tool</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #00d9ff; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .panel { background: #16213e; padding: 20px; border-radius: 10px; }
+        label { display: block; margin-bottom: 8px; color: #00d9ff; font-weight: 500; }
+        textarea { width: 100%; height: 200px; background: #0f3460; border: 1px solid #533483; color: #eee; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 14px; resize: vertical; }
+        input[type="text"] { width: 100%; padding: 12px; background: #0f3460; border: 1px solid #533483; color: #eee; border-radius: 6px; font-size: 16px; }
+        button { background: #00d9ff; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #00a8cc; }
+        .result { background: #0f3460; padding: 12px; border-radius: 6px; min-height: 100px; max-height: 300px; overflow: auto; font-family: monospace; white-space: pre-wrap; }
+        .error { color: #ff6b6b; }
+        .examples { margin-top: 15px; font-size: 14px; }
+        .examples button { padding: 6px 12px; margin: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 JSON Path Query Tool</h1>
+        <div class="grid">
+            <div class="panel">
+                <label>JSON Input</label>
+                <textarea id="jsonInput" placeholder='{"users": [{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]}'></textarea>
+                <div class="examples">
+                    <button onclick="loadSample()">Load Sample</button>
+                    <button onclick="formatJson()">Format</button>
+                </div>
+            </div>
+            <div class="panel">
+                <label>JSONPath Expression</label>
+                <input type="text" id="pathInput" placeholder="$.users[?(@.age > 25)].name" value="$.users[*].name">
+                <button onclick="executeQuery()">Query</button>
+                <label style="margin-top: 20px;">Results</label>
+                <div id="result" class="result">Results will appear here...</div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsonpath@1.1.1/dist/jsonpath.min.js"></script>
+    <script>
+        function loadSample() {
+            document.getElementById('jsonInput').value = JSON.stringify({
+                "store": {
+                    "book": [
+                        {"category": "fiction", "author": "Nigel Rees", "title": "Sword of Wonder", "price": 5.95},
+                        {"category": "fiction", "author": "Evelyn Waugh", "title": "Sword of Shannara", "price": 12.99},
+                        {"category": "programming", "author": "James Freeman", "title": "JavaScript Guide", "price": 39.99},
+                        {"category": "programming", "author": "Jose Pablo", "title": "Python Basics", "price": 24.99}
+                    ],
+                    "bicycle": {"color": "red", "price": 19.95}
+                }
+            }, null, 2);
+        }
+        function formatJson() {
+            try {
+                const data = JSON.parse(document.getElementById('jsonInput').value);
+                document.getElementById('jsonInput').value = JSON.stringify(data, null, 2);
+            } catch(e) {
+                document.getElementById('result').innerHTML = '<span class="error">Invalid JSON</span>';
+            }
+        }
+        function executeQuery() {
+            const resultEl = document.getElementById('result');
+            try {
+                const json = JSON.parse(document.getElementById('jsonInput').value);
+                const path = document.getElementById('pathInput').value;
+                const results = jsonPath.query(json, path);
+                resultEl.textContent = JSON.stringify(results, null, 2);
+            } catch(e) {
+                resultEl.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
+            }
+        }
+        loadSample();
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hex Color Mixer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { color: #c56cf0; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .color-inputs { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 1rem; align-items: end; }
+    .color-inputs input { background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; color: #eee; width: 100%; font-family: monospace; font-size: 18px; text-align: center; }
+    .color-inputs input:focus { outline: none; border-color: #c56cf0; }
+    .vs { color: #666; font-size: 24px; text-align: center; }
+    .slider-container { margin: 2rem 0; }
+    .slider-container label { display: block; color: #aaa; margin-bottom: 0.5rem; text-align: center; }
+    input[type="range"] { width: 100%; accent-color: #c56cf0; }
+    .result { text-align: center; }
+    .result-color { width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 1rem; border: 4px solid #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .result-hex { font-size: 32px; font-family: monospace; color: #c56cf0; cursor: pointer; }
+    .result-rgb { color: #666; font-size: 14px; }
+    .btn { background: #c56cf0; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn:hover { background: #b44de0; }
+    .palette { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .palette color { width: 40px; height: 40px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+    .palette color:hover { border-color: #fff; }
+    .swatch { width: 40px; height: 40px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+    .swatch:hover { border-color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Hex Color Mixer</h1>
+    <p class="subtitle">Blend two colors together</p>
+    
+    <div class="card">
+      <div class="color-inputs">
+        <div>
+          <label style="display:block;color:#666;font-size:14px;margin-bottom:0.5rem">Color 1</label>
+          <input type="text" id="color1" value="#ff6b6b" oninput="mix()">
+        </div>
+        <div class="vs">+</div>
+        <div>
+          <label style="display:block;color:#666;font-size:14px;margin-bottom:0.5rem">Color 2</label>
+          <input type="text" id="color2" value="#4ecdc4" oninput="mix()">
+        </div>
+      </div>
+      
+      <div class="slider-container">
+        <label>Blend: <span id="blendLabel">50%</span></label>
+        <input type="range" id="blend" min="0" max="100" value="50" oninput="mix()">
+      </div>
+      
+      <div class="result">
+        <div class="result-color" id="resultColor"></div>
+        <div class="result-hex" id="resultHex" onclick="copyHex()">#7eddd7</div>
+        <div class="result-rgb" id="resultRgb">rgb(126, 221, 215)</div>
+        <button class="btn" onclick="copyHex()">Copy Hex</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2 style="color:#c56cf0;font-size:1.1rem;margin-bottom:1rem">Quick Palette</h2>
+      <div class="palette" id="palette"></div>
+    </div>
+  </div>
+
+  <script>
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      return { r, g, b };
+    }
+    
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(x => {
+        const hex = Math.round(x).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('');
+    }
+    
+    function mix() {
+      let c1 = document.getElementById('color1').value;
+      let c2 = document.getElementById('color2').value;
+      
+      // Validate hex
+      c1 = c1.match(/^#[0-9a-f]{3,6}$/i) ? c1 : '#ff6b6b';
+      c2 = c2.match(/^#[0-9a-f]{3,6}$/i) ? c2 : '#4ecdc4';
+      
+      const rgb1 = hexToRgb(c1);
+      const rgb2 = hexToRgb(c2);
+      
+      const blend = parseInt(document.getElementById('blend').value) / 100;
+      document.getElementById('blendLabel').textContent = Math.round(blend * 100) + '%';
+      
+      const r = rgb1.r * (1 - blend) + rgb2.r * blend;
+      const g = rgb1.g * (1 - blend) + rgb2.g * blend;
+      const b = rgb1.b * (1 - blend) + rgb2.b * blend;
+      
+      const hex = rgbToHex(r, g, b);
+      
+      document.getElementById('resultColor').style.background = hex;
+      document.getElementById('resultHex').textContent = hex.toUpperCase();
+      document.getElementById('resultRgb').textContent = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    }
+    
+    function copyHex() {
+      const hex = document.getElementById('resultHex').textContent;
+      navigator.clipboard.writeText(hex);
+      alert('Copied: ' + hex);
+    }
+    
+    // Generate palette
+    const paletteColors = [
+      '#ff6b6b','#feca57','#48dbfb','#1dd1a1','#5f27cd',
+      '#ff9ff3','#54a0ff','#00d2d3','#ff9f43','#ee5a24'
+    ];
+    const palette = document.getElementById('palette');
+    paletteColors.forEach(c => {
+      const sw = document.createElement('div');
+      sw.className = 'swatch';
+      sw.style.background = c;
+      sw.onclick = () => {
+        if (!document.getElementById('color1').matches(':focus')) {
+          document.getElementById('color1').value = c;
+        } else {
+          document.getElementById('color2').value = c;
+        }
+        mix();
+      };
+      palette.appendChild(sw);
+    });
+    
+    mix();
+  </script>
+</body>
+</html>

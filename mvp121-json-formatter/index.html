@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Formatter</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d9ff; }
+    .container { display: flex; gap: 20px; flex-wrap: wrap; }
+    .box { flex: 1; min-width: 300px; }
+    textarea { width: 100%; height: 300px; background: #16213e; color: #0f0; border: 1px solid #0f3460; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 14px; }
+    .buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { background: #0f3460; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #e94560; }
+    button.primary { background: #00d9ff; color: #1a1a2e; }
+    .status { padding: 10px; border-radius: 5px; margin-top: 10px; }
+    .status.error { background: #ff4757; }
+    .status.success { background: #2ed573; color: #1a1a2e; }
+    .info { background: #3742fa; padding: 10px; border-radius: 5px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>📄 JSON Formatter</h1>
+  <div class="container">
+    <div class="box">
+      <h3>Input</h3>
+      <textarea id="input" placeholder='{"name": "test", "value": 123}'></textarea>
+    </div>
+    <div class="box">
+      <h3>Output</h3>
+      <textarea id="output" readonly></textarea>
+    </div>
+  </div>
+  <div class="buttons">
+    <button class="primary" onclick="format()">Format</button>
+    <button onclick="minify()">Minify</button>
+    <button onclick="validate()">Validate</button>
+    <button onclick="clearAll()">Clear</button>
+    <button onclick="copy()">Copy</button>
+  </div>
+  <div id="status"></div>
+  <div class="info">💡 Tip: Paste JSON on the left, click Format to pretty-print</div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+
+    function showStatus(msg, isError = true) {
+      status.textContent = msg;
+      status.className = 'status ' + (isError ? 'error' : 'success');
+    }
+
+    function format() {
+      try {
+        const val = JSON.parse(input.value);
+        output.value = JSON.stringify(val, null, 2);
+        showStatus('✅ Formatted successfully', false);
+      } catch (e) {
+        showStatus('❌ Invalid JSON: ' + e.message);
+      }
+    }
+
+    function minify() {
+      try {
+        const val = JSON.parse(input.value);
+        output.value = JSON.stringify(val);
+        showStatus('✅ Minified successfully', false);
+      } catch (e) {
+        showStatus('❌ Invalid JSON: ' + e.message);
+      }
+    }
+
+    function validate() {
+      try {
+        JSON.parse(input.value);
+        showStatus('✅ Valid JSON', false);
+      } catch (e) {
+        showStatus('❌ Invalid JSON: ' + e.message);
+      }
+    }
+
+    function clearAll() {
+      input.value = '';
+      output.value = '';
+      status.textContent = '';
+    }
+
+    function copy() {
+      output.select();
+      document.execCommand('copy');
+      showStatus('📋 Copied to clipboard', false);
+    }
+
+    // Expose for tests
+    window.jsonFormatter = {
+      format: () => { try { return JSON.stringify(JSON.parse(input.value), null, 2); } catch { return null; } },
+      minify: () => { try { return JSON.stringify(JSON.parse(input.value)); } catch { return null; } },
+      validate: (str) => { try { JSON.parse(str); return true; } catch { return false; } },
+      parse: (str) => { try { return JSON.parse(str); } catch { return null; } }
+    };
+  </script>
+</body>
+</html>

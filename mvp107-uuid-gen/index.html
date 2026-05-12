@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UUID Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    h1 { margin-bottom: 2rem; color: #00d9ff; }
+    .options { background: #16213e; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; }
+    .option { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; }
+    input[type="number"] { width: 100px; padding: 0.5rem; background: #0f3460; border: 1px solid #0f3460; color: #fff; border-radius: 4px; }
+    select { padding: 0.5rem; background: #0f3460; border: 1px solid #0f3460; color: #fff; border-radius: 4px; }
+    button { padding: 1rem 2rem; background: #00d9ff; border: none; color: #1a1a2e; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 0.5rem; transition: 0.2s; }
+    button:hover { transform: scale(1.05); }
+    button.secondary { background: #0f3460; color: #fff; }
+    .uuid-list { background: #16213e; border-radius: 8px; padding: 1rem; text-align: left; max-height: 400px; overflow-y: auto; }
+    .uuid-item { display: flex; align-items: center; padding: 0.5rem; border-bottom: 1px solid #0f3460; }
+    .uuid-item:last-child { border-bottom: none; }
+    .uuid { font-family: monospace; font-size: 1.1rem; color: #00d9ff; flex: 1; word-break: break-all; }
+    .copy-btn { padding: 0.25rem 0.5rem; font-size: 0.8rem; background: #0f3460; color: #fff; border: none; border-radius: 4px; cursor: pointer; margin-left: 0.5rem; }
+    .copy-btn:hover { background: #00d9ff; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎲 UUID Generator</h1>
+    <div class="options">
+      <div class="option">
+        <label>Number of UUIDs</label>
+        <input type="number" id="count" value="5" min="1" max="100">
+      </div>
+      <div class="option">
+        <label>Version</label>
+        <select id="version">
+          <option value="4">v4 (Random)</option>
+          <option value="1">v1 (Timestamp)</option>
+        </select>
+      </div>
+      <div class="option">
+        <label>Format</label>
+        <select id="format">
+          <option value="default">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</option>
+          <option value="compact">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</option>
+          <option value="braces">{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="generate()">Generate UUIDs</button>
+    <button class="secondary" onclick="copyAll()">Copy All</button>
+    <button class="secondary" onclick="clearList()">Clear</button>
+    <div class="uuid-list" id="list"></div>
+  </div>
+  <script>
+    function generateUUIDv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function generateUUIDv1() {
+      const now = Date.now();
+      const time_low = (now & 0xffffffff).toString(16).padStart(8, '0');
+      const time_mid = ((now >> 32) & 0xffff).toString(16).padStart(4, '0');
+      const time_hi = ((now >> 48) & 0x0fff).toString(16).padStart(4, '0');
+      const clock_seq = (Math.random() * 0x3fff | 0x8000).toString(16).padStart(4, '0');
+      const node = Array.from({length: 6}, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('');
+      return `${time_low}-${time_mid}-1${time_hi.slice(1)}-${clock_seq}-${node}`;
+    }
+
+    function formatUUID(uuid, format) {
+      if (format === 'compact') return uuid.replace(/-/g, '');
+      if (format === 'braces') return `{${uuid}}`;
+      return uuid;
+    }
+
+    function generate() {
+      const count = parseInt(document.getElementById('count').value) || 1;
+      const version = document.getElementById('version').value;
+      const format = document.getElementById('format').value;
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      
+      for (let i = 0; i < Math.min(count, 100); i++) {
+        let uuid = version === '1' ? generateUUIDv1() : generateUUIDv4();
+        uuid = formatUUID(uuid, format);
+        const item = document.createElement('div');
+        item.className = 'uuid-item';
+        item.innerHTML = `<span class="uuid">${uuid}</span><button class="copy-btn" onclick="copy('${uuid}')">Copy</button>`;
+        list.appendChild(item);
+      }
+    }
+
+    function copy(text) { navigator.clipboard.writeText(text); }
+    function copyAll() {
+      const uuids = document.querySelectorAll('.uuid');
+      const text = Array.from(uuids).map(u => u.textContent).join('\n');
+      navigator.clipboard.writeText(text);
+    }
+    function clearList() { document.getElementById('list').innerHTML = ''; }
+    
+    // Generate initial batch
+    generate();
+  </script>
+</body>
+</html>

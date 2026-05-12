@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Validator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d9ff; }
+    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    textarea { width: 100%; height: 400px; background: #16213e; color: #0f3460; border: 1px solid #0f3460; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 14px; color: #eee; resize: vertical; }
+    .output { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 15px; height: 400px; overflow: auto; font-family: monospace; font-size: 14px; }
+    .btn-group { margin: 15px 0; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+    button:hover { background: #00b8d9; }
+    .error { color: #ff6b6b; }
+    .success { color: #51cf66; }
+    pre { margin: 0; white-space: pre-wrap; }
+    .stats { margin-top: 10px; color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>JSON Validator</h1>
+  <p>Paste JSON to validate, format, or minify</p>
+  
+  <div class="btn-group">
+    <button onclick="validate()">Validate</button>
+    <button onclick="format()">Format</button>
+    <button onclick="minify()">Minify</button>
+    <button onclick="clearAll()">Clear</button>
+  </div>
+  
+  <div class="container">
+    <textarea id="input" placeholder='{"key": "value"}'></textarea>
+    <div id="output" class="output"></div>
+  </div>
+  <div class="stats" id="stats"></div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const stats = document.getElementById('stats');
+
+    function validate() {
+      try {
+        const val = JSON.parse(input.value);
+        output.innerHTML = '<span class="success">✅ Valid JSON</span>';
+        output.innerHTML += '<pre>' + JSON.stringify(val, null, 2) + '</pre>';
+        stats.textContent = 'Characters: ' + input.value.length + ' | Keys: ' + Object.keys(val).length;
+      } catch (e) {
+        output.innerHTML = '<span class="error">❌ Invalid JSON</span>';
+        output.innerHTML += '<pre>' + e.message + '</pre>';
+        stats.textContent = '';
+      }
+    }
+
+    function format() {
+      try {
+        const val = JSON.parse(input.value);
+        output.innerHTML = '<pre>' + JSON.stringify(val, null, 2) + '</pre>';
+        const pretty = JSON.stringify(val, null, 2);
+        stats.textContent = 'Original: ' + input.value.length + ' chars | Formatted: ' + pretty.length + ' chars';
+      } catch (e) {
+        output.innerHTML = '<span class="error">❌ Cannot format: Invalid JSON</span><pre>' + e.message + '</pre>';
+        stats.textContent = '';
+      }
+    }
+
+    function minify() {
+      try {
+        const val = JSON.parse(input.value);
+        const minified = JSON.stringify(val);
+        output.innerHTML = '<pre>' + minified + '</pre>';
+        stats.textContent = 'Original: ' + input.value.length + ' chars | Minified: ' + minified.length + ' chars (saved ' + (input.value.length - minified.length) + ')';
+      } catch (e) {
+        output.innerHTML = '<span class="error">❌ Cannot minify: Invalid JSON</span>';
+        stats.textContent = '';
+      }
+    }
+
+    function clearAll() {
+      input.value = '';
+      output.innerHTML = '';
+      stats.textContent = '';
+    }
+
+    input.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); input.value += '  '; } });
+  </script>
+</body>
+</html>

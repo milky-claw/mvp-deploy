@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Image Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #00d9ff; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { color: #00d9ff; font-size: 1.1rem; margin-bottom: 1rem; }
+    textarea { width: 100%; height: 120px; background: #0f0f23; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 0.75rem; font-family: monospace; font-size: 14px; resize: vertical; }
+    input[type="file"] { background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; width: 100%; color: #ccc; }
+    .btn { background: #00d9ff; color: #1a1a2e; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; margin-right: 0.5rem; }
+    .btn:hover { background: #00b8d9; }
+    .btn.secondary { background: #333; color: #eee; }
+    .preview { margin-top: 1rem; }
+    .preview img { max-width: 100%; border-radius: 8px; border: 2px solid #00d9ff; }
+    .preview-label { color: #00d9ff; margin-bottom: 0.5rem; font-size: 14px; }
+    .stats { color: #666; font-size: 12px; margin-top: 0.5rem; }
+    .error { color: #ff6b6b; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Base64 Image Tool</h1>
+    <p class="subtitle">Encode images to Base64 or decode Base64 back to images</p>
+    
+    <div class="card">
+      <h2>📤 Encode Image to Base64</h2>
+      <input type="file" id="fileInput" accept="image/*">
+      <button class="btn" onclick="encodeImage()">Encode</button>
+      <div class="preview" id="encodePreview"></div>
+      <textarea id="base64Output" placeholder="Base64 output will appear here..."></textarea>
+      <button class="btn secondary" onclick="copyOutput()">Copy Base64</button>
+    </div>
+    
+    <div class="card">
+      <h2>📥 Decode Base64 to Image</h2>
+      <textarea id="base64Input" placeholder="Paste Base64 string here..."></textarea>
+      <button class="btn" onclick="decodeImage()">Decode</button>
+      <div class="error" id="decodeError"></div>
+      <div class="preview" id="decodePreview"></div>
+      <button class="btn secondary" id="downloadBtn" style="display:none" onclick="downloadImage()">Download Image</button>
+    </div>
+  </div>
+
+  <script>
+    let decodedImageData = null;
+    
+    function encodeImage() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return alert('Please select an image first');
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result;
+        document.getElementById('base64Output').value = base64;
+        document.getElementById('encodePreview').innerHTML = `<div class="preview-label">Original:</div><img src="${base64}">`;
+        const sizeKB = Math.round(base64.length / 1024 * 100) / 100;
+        document.getElementById('encodePreview').innerHTML += `<div class="stats">Size: ${sizeKB} KB (${base64.length} chars)</div>`;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function decodeImage() {
+      const base64 = document.getElementById('base64Input').value.trim();
+      if (!base64) return alert('Please paste a Base64 string first');
+      
+      document.getElementById('decodeError').textContent = '';
+      
+      try {
+        // Add data URL prefix if missing
+        const formatted = base64.startsWith('data:') ? base64 : 'data:image/png;base64,' + base64;
+        const img = new Image();
+        img.onload = function() {
+          document.getElementById('decodePreview').innerHTML = `<div class="preview-label">Decoded:</div><img src="${formatted}">`;
+          decodedImageData = formatted;
+          document.getElementById('downloadBtn').style.display = 'inline-block';
+        };
+        img.onerror = function() {
+          document.getElementById('decodeError').textContent = 'Invalid Base64 or unsupported image format';
+        };
+        img.src = formatted;
+      } catch(e) {
+        document.getElementById('decodeError').textContent = 'Error decoding: ' + e.message;
+      }
+    }
+    
+    function copyOutput() {
+      const el = document.getElementById('base64Output');
+      el.select();
+      document.execCommand('copy');
+      alert('Copied!');
+    }
+    
+    function downloadImage() {
+      if (!decodedImageData) return;
+      const a = document.createElement('a');
+      a.href = decodedImageData;
+      a.download = 'decoded-image.png';
+      a.click();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp117-diff-tool"
+publishOrigin = "config"
+commandOrigin = "config"
+base = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp117-diff-tool"
+command = "echo 'No build needed'"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

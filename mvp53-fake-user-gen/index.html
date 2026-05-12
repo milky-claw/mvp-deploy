@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake User Generator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; color: #ff6b6b; margin-bottom: 10px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+    .controls { background: #16213e; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .controls label { display: block; margin-bottom: 8px; font-weight: 600; color: #ff6b6b; }
+    select, input { width: 100%; background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; margin-bottom: 15px; }
+    select:focus, input:focus { outline: none; border-color: #ff6b6b; }
+    .row { display: flex; gap: 10px; }
+    button { background: #ff6b6b; color: #1a1a2e; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; flex: 1; }
+    button:hover { background: #ff5252; }
+    button.secondary { background: #333; color: #fff; }
+    .results { display: flex; flex-direction: column; gap: 15px; }
+    .user-card { background: #16213e; padding: 20px; border-radius: 12px; border-left: 4px solid #ff6b6b; }
+    .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #ff6b6b, #ffa500); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #fff; }
+    .user-name { font-size: 20px; font-weight: 600; }
+    .user-email { color: #888; }
+    .user-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+    .detail { background: #0f0f23; padding: 10px; border-radius: 6px; }
+    .detail-label { color: #666; font-size: 12px; }
+    .detail-value { color: #fff; }
+    .copy-btn { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .copy-btn:hover { background: #444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👤 Fake User Generator</h1>
+    <p class="subtitle">Generate fake user profiles for testing</p>
+    
+    <div class="controls">
+      <label>Number of Users</label>
+      <input type="number" id="count" value="3" min="1" max="50">
+      <label>Country</label>
+      <select id="country">
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+        <option value="de">Germany</option>
+        <option value="fr">France</option>
+        <option value="es">Spain</option>
+      </select>
+      <div class="row">
+        <button onclick="generateUsers()">Generate Users</button>
+        <button class="secondary" onclick="copyAll()">Copy All JSON</button>
+      </div>
+    </div>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <script>
+    const firstNames = {
+      us: ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica'],
+      uk: ['Harry', 'Amelia', 'Oliver', 'Isla', 'Jack', 'Ava', 'George', 'Mia', 'Noah', 'Ella', 'William', 'Grace', 'James', 'Evie', 'Thomas', 'Sophie'],
+      de: ['Hans', 'Maria', 'Peter', 'Anna', 'Michael', 'Sophie', 'Thomas', 'Laura', 'Christian', 'Emma', 'Daniel', 'Mia', 'Stefan', 'Lena', 'Martin', 'Clara'],
+      fr: ['Jean', 'Marie', 'Pierre', 'Sophie', 'Paul', 'Camille', 'Jacques', 'Emma', 'Nicolas', 'Julie', 'Alexandre', 'Chloé', 'Francois', 'Manon', 'Antoine', 'Lucie'],
+      es: ['Juan', 'Maria', 'Carlos', 'Ana', 'Pedro', 'Carmen', 'Luis', 'Isabel', 'Miguel', 'Rosa', 'José', 'Elena', 'Antonio', 'Julia', 'David', 'Sara']
+    };
+
+    const lastNames = {
+      us: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor'],
+      uk: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'White', 'Hughes', 'Edwards', 'Green', 'Hall'],
+      de: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf'],
+      fr: ['Martin', 'Bernard', 'Dupont', 'Durand', 'Leroy', 'Moreau', 'Lefebvre', 'Simon', 'Laurent', 'Leblanc', 'Muller', 'Rousseau', 'Vincent', 'Fournier', 'Morel', 'Girard'],
+      es: ['García', 'Rodríguez', 'González', 'Hernández', 'López', 'Martínez', 'Pérez', 'Sánchez', 'Ramírez', 'Torres', 'Flores', 'Rivera', 'Gómez', 'Díaz', 'Reyes', 'Cruz']
+    };
+
+    const cities = {
+      us: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'Austin'],
+      uk: ['London', 'Birmingham', 'Manchester', 'Glasgow', 'Liverpool', 'Bristol', 'Sheffield', 'Leeds', 'Edinburgh', 'Leicester'],
+      de: ['Berlin', 'Hamburg', 'München', 'Köln', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
+      fr: ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
+      es: ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao']
+    };
+
+    const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'example.com'];
+
+    function random(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function generateUsers() {
+      const count = parseInt(document.getElementById('count').value) || 1;
+      const country = document.getElementById('country').value;
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+
+      for (let i = 0; i < count; i++) {
+        const firstName = random(firstNames[country]);
+        const lastName = random(lastNames[country]);
+        const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(1,99)}@${random(domains)}`;
+        const phone = `+1-${randomInt(200,999)}-${randomInt(100,999)}-${randomInt(1000,9999)}`;
+        const city = random(cities[country]);
+        
+        const user = {
+          id: i + 1,
+          firstName,
+          lastName,
+          email,
+          phone,
+          address: `${randomInt(1,999)} ${random(['Main St', 'Oak Ave', 'Pine Rd', 'Maple Dr', 'Cedar Ln'])}`,
+          city,
+          country: country.toUpperCase(),
+          username: `${firstName.toLowerCase()}${lastName.toLowerCase()}${randomInt(1,99)}`,
+          age: randomInt(18, 75)
+        };
+
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = `
+          <div class="user-header">
+            <div class="avatar">${firstName[0]}${lastName[0]}</div>
+            <div>
+              <div class="user-name">${firstName} ${lastName}</div>
+              <div class="user-email">${email}</div>
+            </div>
+            <button class="copy-btn" style="margin-left: auto;" onclick="copyUser(${i})">Copy</button>
+          </div>
+          <div class="user-details">
+            <div class="detail"><div class="detail-label">Phone</div><div class="detail-value">${phone}</div></div>
+            <div class="detail"><div class="detail-label">Age</div><div class="detail-value">${user.age}</div></div>
+            <div class="detail"><div class="detail-label">Address</div><div class="detail-value">${user.address}</div></div>
+            <div class="detail"><div class="detail-label">City</div><div class="detail-value">${city}</div></div>
+            <div class="detail"><div class="detail-label">Country</div><div class="detail-value">${user.country}</div></div>
+            <div class="detail"><div class="detail-label">Username</div><div class="detail-value">${user.username}</div></div>
+          </div>
+        `;
+        results.appendChild(card);
+      }
+
+      window.generatedUsers = { count, country, users: [] };
+      for (let i = 0; i < count; i++) {
+        const firstName = random(firstNames[country]);
+        const lastName = random(lastNames[country]);
+        window.generatedUsers.users.push({
+          firstName,
+          lastName,
+          email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(1,99)}@${random(domains)}`,
+          phone: `+1-${randomInt(200,999)}-${randomInt(100,999)}-${randomInt(1000,9999)}`,
+          city: random(cities[country])
+        });
+      }
+    }
+
+    function copyUser(index) {
+      const btn = document.querySelectorAll('.copy-btn')[index];
+      navigator.clipboard.writeText(JSON.stringify(window.generatedUsers?.users?.[index] || {}, null, 2));
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    }
+
+    function copyAll() {
+      if (window.generatedUsers?.users) {
+        navigator.clipboard.writeText(JSON.stringify(window.generatedUsers.users, null, 2));
+      }
+    }
+
+    generateUsers();
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text ↔ Binary Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 10px; color: #00d9ff; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 25px; }
+    .panels { display: flex; gap: 20px; flex-wrap: wrap; }
+    .panel { flex: 1; min-width: 300px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    textarea { width: 100%; height: 350px; background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 15px; font-family: 'Monaco', 'Menlo', monospace; font-size: 13px; border-radius: 8px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .buttons { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+    button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    .btn-primary { background: #00d9ff; color: #1a1a2e; }
+    .btn-secondary { background: #e94560; color: #fff; }
+    .btn-copy { background: #0f3460; color: #eee; }
+    .options { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+    .checkbox-group { display: flex; align-items: center; gap: 6px; }
+    .checkbox-group input { width: 18px; height: 18px; accent-color: #00d9ff; }
+    .checkbox-group label { margin: 0; font-weight: 400; }
+    .info { color: #888; font-size: 14px; margin-top: 10px; }
+    .arrow { text-align: center; font-size: 24px; color: #00d9ff; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔢 Text ↔ Binary Converter</h1>
+    <p class="subtitle">Convert text to binary and back</p>
+
+    <div class="options">
+      <div class="checkbox-group">
+        <input type="checkbox" id="spaces" checked>
+        <label for="spaces">Add spaces between bytes</label>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <label>Text Input</label>
+        <textarea id="text" placeholder="Type something here..."></textarea>
+        <div class="buttons">
+          <button class="btn-primary" onclick="toBinary()">→ Binary</button>
+          <button class="btn-secondary" onclick="clearText()">Clear</button>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <label>Binary Output</label>
+        <textarea id="binary" placeholder="01001000 01100101 01101100 01101100 01101111" readonly></textarea>
+        <div class="buttons">
+          <button class="btn-primary" onclick="toText()">← Text</button>
+          <button class="btn-copy" onclick="copyBinary()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info" id="info"></div>
+  </div>
+
+  <script>
+    const textInput = document.getElementById('text');
+    const binaryInput = document.getElementById('binary');
+    const spaces = document.getElementById('spaces');
+    const info = document.getElementById('info');
+
+    function textToBinary(str) {
+      return str.split('').map(char => {
+        return char.charCodeAt(0).toString(2).padStart(8, '0');
+      }).join(spaces.checked ? ' ' : '');
+    }
+
+    function binaryToText(bin) {
+      const cleanBin = bin.replace(/\s+/g, '');
+      if (!/^[01]+$/.test(cleanBin)) {
+        return 'Error: Binary must contain only 0s and 1s';
+      }
+      if (cleanBin.length % 8 !== 0) {
+        return 'Error: Binary string length must be multiple of 8';
+      }
+      const bytes = cleanBin.match(/{8}/g) || [];
+      return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+    }
+
+    function toBinary() {
+      const str = textInput.value;
+      if (!str) return;
+      const result = textToBinary(str);
+      binaryInput.value = result;
+      info.textContent = `${str.length} chars → ${result.length} bits`;
+    }
+
+    function toText() {
+      const bin = binaryInput.value.trim();
+      if (!bin) return;
+      const result = binaryToText(bin);
+      if (result.startsWith('Error')) {
+        info.textContent = result;
+        info.style.color = '#e94560';
+      } else {
+        textInput.value = result;
+        info.textContent = `${bin.replace(/\s/g, '').length} bits → ${result.length} chars`;
+        info.style.color = '#888';
+      }
+    }
+
+    function clearText() {
+      textInput.value = '';
+      binaryInput.value = '';
+      info.textContent = '';
+    }
+
+    function copyBinary() {
+      if (binaryInput.value) {
+        navigator.clipboard.writeText(binaryInput.value);
+      }
+    }
+
+    spaces.addEventListener('change', () => {
+      if (textInput.value) toBinary();
+    });
+  </script>
+</body>
+</html>

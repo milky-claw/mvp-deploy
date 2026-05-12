@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Counter - Text Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #c56cf0; }
+    textarea { width: 100%; height: 200px; padding: 20px; border: 2px solid #333; border-radius: 12px; background: #0f0f23; color: #fff; font-size: 16px; font-family: monospace; resize: vertical; }
+    textarea:focus { border-color: #c56cf0; outline: none; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+    .stat-card { background: #16213e; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-card .number { font-size: 32px; font-weight: bold; color: #c56cf0; }
+    .stat-card .label { font-size: 14px; color: #888; margin-top: 5px; }
+    .stat-card.highlight { background: linear-gradient(135deg, #c56cf0 0%, #7b2cbf 100%); }
+    .stat-card.highlight .number { color: #fff; }
+    .stat-card.highlight .label { color: rgba(255,255,255,0.8); }
+    .details { background: #16213e; border-radius: 12px; padding: 20px; margin-top: 20px; }
+    .details h3 { color: #c56cf0; margin-bottom: 15px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .label { color: #888; }
+    .detail-row .value { font-weight: 600; }
+    .limit-bar { margin-top: 20px; }
+    .limit-bar .info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+    .limit-bar .bar { height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+    .limit-bar .fill { height: 100%; background: #c56cf0; transition: width 0.3s; }
+    .limit-bar .fill.warning { background: #ffb347; }
+    .limit-bar .fill.danger { background: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔤 Character Counter</h1>
+    
+    <textarea id="textInput" placeholder="Paste or type your text here..."></textarea>
+
+    <div class="stats-grid">
+      <div class="stat-card highlight">
+        <div class="number" id="chars">0</div>
+        <div class="label">Characters</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="charsNoSpace">0</div>
+        <div class="label">No Spaces</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="words">0</div>
+        <div class="label">Words</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="lines">0</div>
+        <div class="label">Lines</div>
+      </div>
+    </div>
+
+    <div class="details">
+      <h3>More Details</h3>
+      <div class="detail-row">
+        <span class="label">Paragraphs</span>
+        <span class="value" id="paragraphs">0</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Sentences</span>
+        <span class="value" id="sentences">0</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Unique Words</span>
+        <span class="value" id="uniqueWords">0</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Average Word Length</span>
+        <span class="value" id="avgWordLength">0</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Reading Time</span>
+        <span class="value" id="readingTime">0 sec</span>
+      </div>
+    </div>
+
+    <div class="limit-bar">
+      <div class="info">
+        <span>Twitter (280)</span>
+        <span id="twitterCount">0 / 280</span>
+      </div>
+      <div class="bar">
+        <div class="fill" id="twitterFill" style="width: 0%"></div>
+      </div>
+    </div>
+    
+    <div class="limit-bar">
+      <div class="info">
+        <span>Meta Description (160)</span>
+        <span id="metaCount">0 / 160</span>
+      </div>
+      <div class="bar">
+        <div class="fill" id="metaFill" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const textarea = document.getElementById('textInput');
+    
+    textarea.addEventListener('input', updateStats);
+
+    function updateStats() {
+      const text = textarea.value;
+      
+      // Basic counts
+      const chars = text.length;
+      const charsNoSpace = text.replace(/\s/g, '').length;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const lines = text ? text.split('\n').length : 0;
+      const paragraphs = text.split(/\n\n+/).filter(p => p.trim()).length || (text.trim() ? 1 : 0);
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim()).length || 0;
+      
+      // Unique words
+      const wordsArray = text.toLowerCase().match(/\b\w+\b/g) || [];
+      const uniqueWords = [...new Set(wordsArray)].length;
+      
+      // Average word length
+      const avgWordLength = wordsArray.length > 0 
+        ? (wordsArray.reduce((a, b) => a + b.length, 0) / wordsArray.length).toFixed(1)
+        : 0;
+      
+      // Reading time (avg 200 words/min)
+      const readingTime = words > 0 ? Math.ceil(words / 200) : 0;
+      const readingTimeStr = readingTime >= 1 
+        ? `${readingTime} min` 
+        : `${Math.ceil(words / 200 * 60)} sec`;
+
+      // Update UI
+      document.getElementById('chars').textContent = chars;
+      document.getElementById('charsNoSpace').textContent = charsNoSpace;
+      document.getElementById('words').textContent = words;
+      document.getElementById('lines').textContent = lines;
+      document.getElementById('paragraphs').textContent = paragraphs;
+      document.getElementById('sentences').textContent = sentences;
+      document.getElementById('uniqueWords').textContent = uniqueWords;
+      document.getElementById('avgWordLength').textContent = avgWordLength;
+      document.getElementById('readingTime').textContent = readingTimeStr;
+
+      // Twitter limit
+      const twitterCount = document.getElementById('twitterCount');
+      const twitterFill = document.getElementById('twitterFill');
+      const twitterPct = Math.min((chars / 280) * 100, 100);
+      twitterCount.textContent = `${chars} / 280`;
+      twitterFill.style.width = twitterPct + '%';
+      twitterFill.className = 'fill' + (twitterPct > 100 ? ' danger' : twitterPct > 90 ? ' warning' : '');
+
+      // Meta description limit
+      const metaCount = document.getElementById('metaCount');
+      const metaFill = document.getElementById('metaFill');
+      const metaPct = Math.min((chars / 160) * 100, 100);
+      metaCount.textContent = `${chars} / 160`;
+      metaFill.style.width = metaPct + '%';
+      metaFill.className = 'fill' + (metaPct > 100 ? ' danger' : metaPct > 90 ? ' warning' : '');
+    }
+
+    // Initial call
+    updateStats();
+  </script>
+</body>
+</html>

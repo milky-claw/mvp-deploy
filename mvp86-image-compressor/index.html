@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Compressor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 28px; }
+    .dropzone { border: 3px dashed #333; border-radius: 16px; padding: 60px 40px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .dropzone:hover, .dropzone.dragover { border-color: #e94560; background: rgba(233,69,96,0.1); }
+    .dropzone p { font-size: 18px; color: #888; }
+    .dropzone span { color: #e94560; }
+    .preview { margin-top: 30px; display: none; }
+    .preview.active { display: block; }
+    .images { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .image-card { background: #1a1a1a; border-radius: 12px; padding: 16px; }
+    .image-card img { width: 100%; height: 200px; object-fit: contain; border-radius: 8px; background: #000; }
+    .info { margin-top: 12px; font-size: 14px; color: #888; }
+    .info strong { color: #fff; }
+    .size-row { display: flex; justify-content: space-between; margin-top: 4px; }
+    .download-btn { display: block; width: 100%; margin-top: 12px; padding: 10px; background: #e94560; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; text-decoration: none; text-align: center; }
+    .download-btn:hover { background: #d63d56; }
+    .settings { margin-top: 24px; background: #1a1a1a; padding: 20px; border-radius: 12px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .setting-row label { font-size: 14px; color: #aaa; }
+    input[type="range"] { width: 150px; }
+    .quality-val { color: #e94560; font-weight: bold; }
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Image Compressor</h1>
+    <div class="dropzone" id="dropzone">
+      <p>Drop images here or <span>click to browse</span></p>
+      <input type="file" id="fileInput" accept="image/*" multiple>
+    </div>
+    <div class="settings">
+      <div class="setting-row">
+        <label>Quality</label>
+        <input type="range" id="quality" min="10" max="100" value="80">
+        <span class="quality-val" id="qualityVal">80%</span>
+      </div>
+      <div class="setting-row">
+        <label>Max Width</label>
+        <input type="range" id="maxWidth" min="300" max="2000" value="1200" step="100">
+        <span id="maxWidthVal">1200px</span>
+      </div>
+    </div>
+    <div class="preview" id="preview">
+      <div class="images" id="images"></div>
+    </div>
+  </div>
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const quality = document.getElementById('quality');
+    const maxWidth = document.getElementById('maxWidth');
+    const qualityVal = document.getElementById('qualityVal');
+    const maxWidthVal = document.getElementById('maxWidthVal');
+    const preview = document.getElementById('preview');
+    const images = document.getElementById('images');
+    
+    quality.addEventListener('input', () => qualityVal.textContent = quality.value + '%');
+    maxWidth.addEventListener('input', () => maxWidthVal.textContent = maxWidth.value + 'px');
+    
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    
+    async function handleFiles(files) {
+      if (files.length === 0) return;
+      preview.classList.add('active');
+      images.innerHTML = '';
+      
+      for (const file of files) {
+        await compressImage(file);
+      }
+    }
+    
+    function compressImage(file) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const width = Math.min(img.width, parseInt(maxWidth.value));
+          const height = (img.height / img.width) * width;
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          const qual = parseInt(quality.value) / 100;
+          const compressed = canvas.toDataURL('image/jpeg', qual);
+          
+          const origSize = file.size;
+          const newSize = Math.round((compressed.length - 22) * 3/4);
+          const savings = Math.round((1 - newSize/origSize) * 100);
+          
+          const card = document.createElement('div');
+          card.className = 'image-card';
+          card.innerHTML = `
+            <img src="${compressed}" alt="${file.name}">
+            <div class="info">
+              <div class="size-row"><span>Original:</span><strong>${formatSize(origSize)}</strong></div>
+              <div class="size-row"><span>Compressed:</span><strong>${formatSize(newSize)}</strong></div>
+              <div class="size-row"><span>Savings:</span><strong style="color:#4ade80">${savings > 0 ? '-' + savings + '%' : '+' + Math.abs(savings) + '%'}</strong></div>
+            </div>
+            <a href="${compressed}" download="compressed-${file.name}" class="download-btn">Download</a>
+          `;
+          images.appendChild(card);
+          resolve();
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+    
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+      return (bytes/(1024*1024)).toFixed(1) + ' MB';
+    }
+  </script>
+</body>
+</html>

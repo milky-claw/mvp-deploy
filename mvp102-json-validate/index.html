@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Validator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 40px 20px; }
+    .container { background: #16213e; padding: 40px; border-radius: 16px; width: 100%; max-width: 900px; margin: 0 auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+    h1 { text-align: center; margin-bottom: 30px; color: #00ff88; }
+    .input-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; color: #aaa; }
+    textarea { width: 100%; padding: 14px; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; font-size: 14px; font-family: 'Monaco', 'Menlo', monospace; min-height: 200px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00ff88; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn { flex: 1; padding: 14px; background: linear-gradient(135deg, #00ff88, #00cc6a); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn.secondary { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); color: #fff; }
+    .status { text-align: center; padding: 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
+    .status.valid { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 2px solid #00ff88; }
+    .status.invalid { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; border: 2px solid #ff6b6b; }
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 700px) { .results { grid-template-columns: 1fr; } }
+    .panel { background: #0f3460; padding: 20px; border-radius: 8px; }
+    .panel h3 { color: #00d9ff; margin-bottom: 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+    .panel-content { font-family: 'Monaco', 'Menlo', monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow: auto; }
+    .error-line { color: #ff6b6b; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat { background: #0f3460; padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #00d9ff; }
+    .stat-label { font-size: 12px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✅ JSON Validator</h1>
+    <div class="input-group">
+      <label>Paste JSON here</label>
+      <textarea id="json-input" placeholder='{"name": "test", "value": 123}'>{"name": "test", "items": [1, 2, 3], "active": true}</textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="validate()">Validate & Format</button>
+      <button class="btn secondary" onclick="minify()">Minify</button>
+      <button class="btn secondary" onclick="clearInput()">Clear</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-value" id="stat-keys">0</div><div class="stat-label">Keys</div></div>
+      <div class="stat"><div class="stat-value" id="stat-size">0</div><div class="stat-label">Chars</div></div>
+      <div class="stat"><div class="stat-value" id="stat-depth">0</div><div class="stat-label">Max Depth</div></div>
+    </div>
+    <div id="status" class="status valid">✅ Valid JSON</div>
+    <div class="results">
+      <div class="panel">
+        <h3>Formatted Output</h3>
+        <div class="panel-content" id="formatted"></div>
+      </div>
+      <div class="panel">
+        <h3>Raw Output</h3>
+        <div class="panel-content" id="raw"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function getStats(obj, depth = 0) {
+      let keys = 0, maxDepth = depth;
+      if (obj && typeof obj === 'object') {
+        keys = Object.keys(obj).length;
+        for (const v of Object.values(obj)) {
+          const child = getStats(v, depth + 1);
+          keys += child.keys;
+          maxDepth = Math.max(maxDepth, child.depth);
+        }
+      }
+      return { keys, depth: maxDepth };
+    }
+    
+    function validate() {
+      const input = document.getElementById('json-input').value;
+      const status = document.getElementById('status');
+      const formatted = document.getElementById('formatted');
+      const raw = document.getElementById('raw');
+      
+      if (!input.trim()) {
+        status.className = 'status invalid';
+        status.textContent = '⚠️ Empty input';
+        formatted.textContent = '';
+        raw.textContent = '';
+        return;
+      }
+      
+      try {
+        const parsed = JSON.parse(input);
+        const formattedStr = JSON.stringify(parsed, null, 2);
+        const rawStr = JSON.stringify(parsed);
+        
+        status.className = 'status valid';
+        status.textContent = '✅ Valid JSON';
+        
+        formatted.textContent = formattedStr;
+        raw.textContent = rawStr;
+        
+        const stats = getStats(parsed);
+        document.getElementById('stat-keys').textContent = stats.keys;
+        document.getElementById('stat-size').textContent = input.length;
+        document.getElementById('stat-depth').textContent = stats.depth;
+        
+      } catch (e) {
+        status.className = 'status invalid';
+        status.textContent = '❌ Invalid JSON: ' + e.message;
+        formatted.textContent = '';
+        raw.textContent = '';
+      }
+    }
+    
+    function minify() {
+      const input = document.getElementById('json-input').value;
+      try {
+        const parsed = JSON.parse(input);
+        const minified = JSON.stringify(parsed);
+        document.getElementById('json-input').value = minified;
+        validate();
+      } catch (e) {
+        const status = document.getElementById('status');
+        status.className = 'status invalid';
+        status.textContent = '❌ Cannot minify: ' + e.message;
+      }
+    }
+    
+    function clearInput() {
+      document.getElementById('json-input').value = '';
+      document.getElementById('formatted').textContent = '';
+      document.getElementById('raw').textContent = '';
+      document.getElementById('stat-keys').textContent = '0';
+      document.getElementById('stat-size').textContent = '0';
+      document.getElementById('stat-depth').textContent = '0';
+      const status = document.getElementById('status');
+      status.className = 'status valid';
+      status.textContent = '✅ Valid JSON';
+    }
+    validate();
+  </script>
+</body>
+</html>

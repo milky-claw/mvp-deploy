@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encoder/Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .panel { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #aaa; }
+    textarea, input { width: 100%; background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 1rem; color: #fff; font-family: monospace; font-size: 14px; }
+    textarea { height: 150px; resize: vertical; }
+    .btn-group { display: flex; gap: 1rem; margin-top: 1rem; }
+    button { flex: 1; padding: 1rem; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, opacity 0.2s; }
+    button:hover { transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    .encode { background: #00d9ff; color: #1a1a2e; }
+    .decode { background: #ff6b6b; color: #fff; }
+    .copy { background: #4ecca3; color: #1a1a2e; }
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #4ecca3; color: #1a1a2e; padding: 1rem 2rem; border-radius: 8px; font-weight: 600; opacity: 0; transition: transform 0.3s, opacity 0.3s; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔤 Base64 Encoder/Decoder</h1>
+    
+    <div class="panel">
+      <label>Input Text</label>
+      <textarea id="input" placeholder="Enter text to encode or Base64 to decode..."></textarea>
+      <div class="btn-group">
+        <button class="encode" onclick="encode()">Encode →</button>
+        <button class="decode" onclick="decode()">← Decode</button>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <label>Output</label>
+      <textarea id="output" readonly placeholder="Result will appear here..."></textarea>
+      <div class="btn-group">
+        <button class="copy" onclick="copy()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    function encode() {
+      const input = document.getElementById('input').value;
+      try {
+        document.getElementById('output').value = btoa(unescape(encodeURIComponent(input)));
+      } catch (e) {
+        document.getElementById('output').value = 'Error: ' + e.message;
+      }
+    }
+    
+    function decode() {
+      const input = document.getElementById('input').value;
+      try {
+        document.getElementById('output').value = decodeURIComponent(escape(atob(input)));
+      } catch (e) {
+        document.getElementById('output').value = 'Error: Invalid Base64';
+      }
+    }
+    
+    function copy() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

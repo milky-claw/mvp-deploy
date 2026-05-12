@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slug Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .input-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; font-weight: 600; }
+    input[type="text"] { width: 100%; padding: 1rem; background: #16213e; border: 1px solid #0f3460; border-radius: 8px; color: #fff; font-size: 1.1rem; }
+    input[type="text"]:focus { outline: none; border-color: #00d9ff; }
+    .options { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; background: #16213e; padding: 1rem; border-radius: 8px; }
+    .checkbox-group { display: flex; align-items: center; gap: 0.5rem; }
+    .checkbox-group input { width: auto; }
+    .result-box { background: #16213e; padding: 1.5rem; border-radius: 8px; border: 2px solid #0f3460; }
+    .result-box.has-value { border-color: #00d9ff; }
+    .slug { font-family: monospace; font-size: 1.3rem; color: #00d9ff; word-break: break-all; margin-bottom: 1rem; }
+    .url-preview { color: #aaa; font-size: 0.9rem; }
+    .buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    button { padding: 0.75rem 1.5rem; background: #0f3460; border: none; color: #fff; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #00d9ff; color: #1a1a2e; }
+    button.primary { background: #00d9ff; color: #1a1a2e; font-weight: bold; }
+    .history { margin-top: 2rem; }
+    .history h3 { color: #aaa; margin-bottom: 1rem; }
+    .history-item { padding: 0.75rem; background: #16213e; margin-bottom: 0.5rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .history-slug { font-family: monospace; color: #00d9ff; }
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #00d9ff; color: #1a1a2e; padding: 1rem 2rem; border-radius: 8px; font-weight: bold; opacity: 0; transition: 0.3s; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 Slug Generator</h1>
+    <div class="input-group">
+      <label>Enter text to convert to URL slug</label>
+      <input type="text" id="input" placeholder="Hello World! How are you today?" autofocus>
+    </div>
+    <div class="options">
+      <div class="checkbox-group">
+        <input type="checkbox" id="lowercase" checked>
+        <label for="lowercase">Lowercase</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="remove-stopwords" checked>
+        <label for="remove-stopwords">Remove stop words</label>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="remove-special" checked>
+        <label for="remove-special">Remove special chars</label>
+      </div>
+    </div>
+    <div class="result-box" id="resultBox">
+      <div class="slug" id="slug"></div>
+      <div class="url-preview" id="preview"></div>
+      <div class="buttons">
+        <button class="primary" onclick="copySlug()">Copy Slug</button>
+        <button onclick="addToHistory()">Save to History</button>
+        <button onclick="clearInput()">Clear</button>
+      </div>
+    </div>
+    <div class="history" id="history" style="display: none;">
+      <h3>History</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast">Copied!</div>
+  <script>
+    const STOP_WORDS = new Set(['a','an','and','are','as','at','be','by','for','from','has','he','in','is','it','its','of','on','or','that','the','to','was','were','will','with']);
+    const input = document.getElementById('input');
+    const slugEl = document.getElementById('slug');
+    const previewEl = document.getElementById('preview');
+    const resultBox = document.getElementById('resultBox');
+
+    function generateSlug() {
+      let text = input.value;
+      let slug = text;
+
+      // Remove special characters
+      if (document.getElementById('remove-special').checked) {
+        slug = slug.replace(/[^\w\s-]/g, '');
+      }
+
+      // Replace spaces with hyphens
+      slug = slug.replace(/\s+/g, '-');
+
+      // Remove stop words
+      if (document.getElementById('remove-stopwords').checked) {
+        slug = slug.split('-').filter(w => !STOP_WORDS.has(w.toLowerCase())).join('-');
+      }
+
+      // Lowercase
+      if (document.getElementById('lowercase').checked) {
+        slug = slug.toLowerCase();
+      }
+
+      // Clean up multiple hyphens
+      slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+      slugEl.textContent = slug || '...';
+      previewEl.textContent = slug ? `https://example.com/${slug}` : '';
+      resultBox.classList.toggle('has-value', !!slug);
+    }
+
+    function copySlug() {
+      const slug = slugEl.textContent;
+      if (slug && slug !== '...') {
+        navigator.clipboard.writeText(slug);
+        showToast();
+      }
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function addToHistory() {
+      const slug = slugEl.textContent;
+      if (!slug || slug === '...') return;
+      
+      const history = JSON.parse(localStorage.getItem('slugHistory') || '[]');
+      if (!history.includes(slug)) {
+        history.unshift(slug);
+        localStorage.setItem('slugHistory', JSON.stringify(history.slice(0, 20)));
+        renderHistory();
+      }
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('slugHistory') || '[]');
+      const historySection = document.getElementById('history');
+      const historyList = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        historySection.style.display = 'none';
+        return;
+      }
+      
+      historySection.style.display = 'block';
+      historyList.innerHTML = history.map(s => `
+        <div class="history-item">
+          <span class="history-slug">${s}</span>
+          <button onclick="copyToClipboard('${s}')">Copy</button>
+        </div>
+      `).join('');
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      showToast();
+    }
+
+    function clearInput() {
+      input.value = '';
+      generateSlug();
+    }
+
+    input.addEventListener('input', generateSlug);
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', generateSlug));
+    
+    renderHistory();
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp72-json-path"
+publishOrigin = "config"
+commandOrigin = "config"
+base = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp72-json-path"
+command = "echo 'No build required'"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

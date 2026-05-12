@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regex Tester</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d4ff; }
+    .container { display: grid; gap: 15px; }
+    label { font-weight: bold; color: #00d4ff; }
+    input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px; background: #16213e; color: #fff; font-family: monospace; font-size: 14px; }
+    textarea { min-height: 150px; }
+    .flags { display: flex; gap: 15px; margin: 10px 0; }
+    .flag { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .results { background: #16213e; padding: 15px; border-radius: 8px; min-height: 100px; }
+    .match { background: #28a745; padding: 2px 6px; border-radius: 4px; margin: 2px; display: inline-block; }
+    .no-match { color: #ff6b6b; }
+    .error { color: #ff6b6b; background: rgba(255,107,107,0.1); padding: 10px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Regex Tester</h1>
+  <div class="container">
+    <div>
+      <label>Pattern</label>
+      <input type="text" id="pattern" placeholder="e.g., \b\w+\b" value="\b\w+\b">
+    </div>
+    <div class="flags">
+      <label class="flag"><input type="checkbox" id="flag-g" checked> Global (g)</label>
+      <label class="flag"><input type="checkbox" id="flag-i"> Case Insensitive (i)</label>
+      <label class="flag"><input type="checkbox" id="flag-m"> Multiline (m)</label>
+    </div>
+    <div>
+      <label>Test String</label>
+      <textarea id="testString" placeholder="Enter text to test against...">The quick brown fox jumps over the lazy dog.</textarea>
+    </div>
+    <div class="results" id="results">Matches will appear here...</div>
+  </div>
+  <script>
+    const patternEl = document.getElementById('pattern');
+    const testEl = document.getElementById('testString');
+    const resultsEl = document.getElementById('results');
+    const flags = ['g', 'i', 'm'].map(f => document.getElementById('flag-' + f));
+
+    function runTest() {
+      try {
+        const flagStr = flags.filter(f => f.checked).map(f => f.value).join('');
+        const regex = new RegExp(patternEl.value, flagStr);
+        const text = testEl.value;
+        
+        if (!patternEl.value) {
+          resultsEl.innerHTML = 'Enter a pattern...';
+          return;
+        }
+
+        let matches = [];
+        let match;
+        if (flagStr.includes('g')) {
+          while ((match = regex.exec(text)) !== null) {
+            matches.push(match[0]);
+            if (match.index === regex.lastIndex) regex.lastIndex++;
+          }
+        } else {
+          match = text.match(regex);
+          if (match) matches = [match[0]];
+        }
+
+        if (matches.length > 0) {
+          resultsEl.innerHTML = matches.map(m => `<span class="match">${m}</span>`).join(' ') + 
+            `<br><br><strong>${matches.length} match(es) found</strong>`;
+        } else {
+          resultsEl.innerHTML = '<span class="no-match">No matches found</span>';
+        }
+      } catch (e) {
+        resultsEl.innerHTML = `<div class="error">${e.message}</div>`;
+      }
+    }
+
+    patternEl.addEventListener('input', runTest);
+    testEl.addEventListener('input', runTest);
+    flags.forEach(f => f.addEventListener('change', runTest));
+    runTest();
+  </script>
+</body>
+</html>

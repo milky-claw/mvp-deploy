@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Previewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; margin: 0; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; color: #a855f7; margin-bottom: 10px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+    .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 150px); min-height: 500px; }
+    @media (max-width: 800px) { .editor { grid-template-columns: 1fr; } }
+    .pane { background: #16213e; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .pane-header { background: #0f0f23; padding: 12px 20px; font-weight: 600; color: #a855f7; border-bottom: 1px solid #333; }
+    textarea { flex: 1; width: 100%; background: #16213e; border: none; padding: 20px; color: #fff; font-family: 'Monaco', 'Menlo', monospace; font-size: 14px; line-height: 1.6; resize: none; }
+    textarea:focus { outline: none; }
+    .preview { flex: 1; padding: 20px; overflow-y: auto; }
+    .preview h1, .preview h2, .preview h3 { color: #a855f7; margin-top: 0; }
+    .preview h2 { border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .preview code { background: #0f0f23; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    .preview pre { background: #0f0f23; padding: 15px; border-radius: 8px; overflow-x: auto; }
+    .preview pre code { background: none; padding: 0; }
+    .preview blockquote { border-left: 4px solid #a855f7; margin: 0; padding-left: 15px; color: #888; }
+    .preview table { width: 100%; border-collapse: collapse; }
+    .preview th, .preview td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
+    .preview th { background: #0f0f23; }
+    .preview a { color: #a855f7; }
+    .preview img { max-width: 100%; border-radius: 8px; }
+    .preview ul, .preview ol { padding-left: 20px; }
+    .preview li { margin: 5px 0; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .toolbar button { background: #333; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .toolbar button:hover { background: #444; }
+    .toolbar button.primary { background: #a855f7; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Markdown Previewer</h1>
+    <p class="subtitle">Live preview for GitHub-flavored Markdown</p>
+    
+    <div class="toolbar">
+      <button class="primary" onclick="insertTemplate()">Insert Template</button>
+      <button onclick="insertBold()">Bold</button>
+      <button onclick="insertItalic()">Italic</button>
+      <button onclick="insertCode()">Code</button>
+      <button onclick="insertLink()">Link</button>
+      <button onclick="insertList()">List</button>
+      <button onclick="insertTable()">Table</button>
+    </div>
+
+    <div class="editor">
+      <div class="pane">
+        <div class="pane-header">Markdown</div>
+        <textarea id="markdown" placeholder="Type your markdown here..."># Hello World
+
+This is a **markdown** previewer.
+
+## Features
+- Live preview
+- GitHub-flavored markdown
+- Quick insert buttons
+
+## Code Example
+```javascript
+const hello = "world";
+console.log(hello);
+```
+
+## Table
+| Name | Value |
+|------|-------|
+| A    | 1     |
+| B    | 2     |
+
+> Blockquote example
+
+[Link to Google](https://google.com)</textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-header">Preview</div>
+        <div class="preview" id="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const markdownInput = document.getElementById('markdown');
+    const preview = document.getElementById('preview');
+
+    function render() {
+      preview.innerHTML = marked.parse(markdownInput.value, { gfm: true, breaks: true });
+    }
+
+    render();
+    markdownInput.addEventListener('input', render);
+
+    function insertAtCursor(text) {
+      const start = markdownInput.selectionStart;
+      const end = markdownInput.selectionEnd;
+      const before = markdownInput.value.substring(0, start);
+      const after = markdownInput.value.substring(end);
+      markdownInput.value = before + text + after;
+      markdownInput.focus();
+      render();
+    }
+
+    function insertTemplate() {
+      markdownInput.value = `# Title
+
+## Section
+
+**Bold** and *italic* text.
+
+- List item 1
+- List item 2
+
+\`\`\`js
+// Code block
+\`\`\`
+
+> Quote
+
+| Table | Header |
+|-------|--------|
+| Cell  | Cell   |
+`;
+      render();
+    }
+
+    function insertBold() { insertAtCursor('**bold**'); }
+    function insertItalic() { insertAtCursor('*italic*'); }
+    function insertCode() { insertAtCursor('`code`'); }
+    function insertLink() { insertAtCursor('[text](url)'); }
+    function insertList() { insertAtCursor('\n- Item 1\n- Item 2\n- Item 3\n'); }
+    function insertTable() { insertAtCursor('\n| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n'); }
+  </script>
+</body>
+</html>

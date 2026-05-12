@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #a55eea; }
+    .preview { height: 150px; border-radius: 12px; margin-bottom: 1.5rem; transition: background 0.3s; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .panel { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .input-group { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+    .input-group label { min-width: 80px; color: #aaa; font-weight: 600; }
+    .input-group input { flex: 1; background: #0f0f23; border: 1px solid #333; border-radius: 8px; padding: 0.75rem 1rem; color: #fff; font-family: monospace; font-size: 16px; }
+    .input-group input:focus { outline: none; border-color: #a55eea; }
+    .btn-group { display: flex; gap: 1rem; }
+    button { flex: 1; padding: 1rem; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+    button:hover { transform: translateY(-2px); }
+    .random { background: #ff6b6b; color: #fff; }
+    .copy { background: #4ecca3; color: #1a1a2e; }
+    .formats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .format { background: #0f0f23; padding: 1rem; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .format:hover { background: #1a1a3e; }
+    .format-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+    .format-value { font-family: monospace; font-size: 14px; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Color Converter</h1>
+    
+    <div class="preview" id="preview" style="background: #a55eea;">#A55EEA</div>
+    
+    <div class="panel">
+      <div class="input-group">
+        <label>HEX</label>
+        <input type="text" id="hexInput" value="#A55EEA" oninput="fromHex()">
+      </div>
+      <div class="input-group">
+        <label>RGB</label>
+        <input type="text" id="rgbInput" value="rgb(165, 94, 234)" oninput="fromRgb()">
+      </div>
+      <div class="input-group">
+        <label>HSL</label>
+        <input type="text" id="hslInput" value="hsl(270, 60%, 65%)" oninput="fromHsl()">
+      </div>
+      <div class="btn-group">
+        <button class="random" onclick="randomColor()">🎲 Random</button>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <label>Click to Copy</label>
+      <div class="formats">
+        <div class="format" onclick="copy('#'+hex)">
+          <div class="format-label">HEX</div>
+          <div class="format-value" id="formatHex">#A55EEA</div>
+        </div>
+        <div class="format" onclick="copy('rgb('+r+', '+g+', '+b+')')">
+          <div class="format-label">RGB</div>
+          <div class="format-value" id="formatRgb">rgb(165, 94, 234)</div>
+        </div>
+        <div class="format" onclick="copy('hsl('+h+', '+s+'%, '+l+'%)')">
+          <div class="format-label">HSL</div>
+          <div class="format-value" id="formatHsl">hsl(270, 60%, 65%)</div>
+        </div>
+        <div class="format" onclick="copy('rgba('+r+', '+g+', '+b+', 1)')">
+          <div class="format-label">RGBA</div>
+          <div class="format-value" id="formatRgba">rgba(165, 94, 234, 1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let r = 165, g = 94, b = 234;
+    let h = 270, s = 60, l = 65;
+    let hex = 'A55EEA';
+    
+    function updateAll() {
+      document.getElementById('preview').style.background = `rgb(${r}, ${g}, ${b})`;
+      document.getElementById('preview').textContent = '#' + hex;
+      document.getElementById('hexInput').value = '#' + hex;
+      document.getElementById('rgbInput').value = `rgb(${r}, ${g}, ${b})`;
+      document.getElementById('hslInput').value = `hsl(${h}, ${s}%, ${l}%)`;
+      document.getElementById('formatHex').textContent = '#' + hex;
+      document.getElementById('formatRgb').textContent = `rgb(${r}, ${g}, ${b})`;
+      document.getElementById('formatHsl').textContent = `hsl(${h}, ${s}%, ${l}%)`;
+      document.getElementById('formatRgba').textContent = `rgba(${r}, ${g}, ${b}, 1)`;
+    }
+    
+    function fromHex() {
+      let val = document.getElementById('hexInput').value.replace('#', '');
+      if (val.length === 3) {
+        val = val[0]+val[0] + val[1]+val[1] + val[2]+val[2];
+      }
+      if (val.length === 6) {
+        r = parseInt(val.substr(0,2), 16);
+        g = parseInt(val.substr(2,2), 16);
+        b = parseInt(val.substr(4,2), 16);
+        hex = val;
+        rgbToHsl();
+        updateAll();
+      }
+    }
+    
+    function fromRgb() {
+      const match = document.getElementById('rgbInput').value.match(/rgb\(?(\d+),?\s*(\d+),?\s*(\d+)\)?/);
+      if (match) {
+        r = Math.min(255, parseInt(match[1]));
+        g = Math.min(255, parseInt(match[2]));
+        b = Math.min(255, parseInt(match[3]));
+        hex = (r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0')).toUpperCase();
+        rgbToHsl();
+        updateAll();
+      }
+    }
+    
+    function fromHsl() {
+      const match = document.getElementById('hslInput').value.match(/hsl\(?(\d+),?\s*(\d+)%?,?\s*(\d+)%?\)?/);
+      if (match) {
+        h = parseInt(match[1]);
+        s = parseInt(match[2]);
+        l = parseInt(match[3]);
+        hslToRgb();
+        hex = (r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0')).toUpperCase();
+        updateAll();
+      }
+    }
+    
+    function rgbToHsl() {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let d = max - min;
+      l = (max + min) / 2 * 100;
+      if (d === 0) { h = 0; s = 0; }
+      else {
+        s = l > 50 ? d / (2 - max - min) * 100 : d / (max + min) * 100;
+        switch(max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) * 60; break;
+          case g: h = ((b - r) / d + 2) * 60; break;
+          case b: h = ((r - g) / d + 4) * 60; break;
+        }
+      }
+      h = Math.round(h); s = Math.round(s); l = Math.round(l);
+    }
+    
+    function hslToRgb() {
+      h /= 360; s /= 100; l /= 100;
+      if (s === 0) { r = g = b = l; }
+      else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      r = Math.round(r * 255);
+      g = Math.round(g * 255);
+      b = Math.round(b * 255);
+    }
+    
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+    
+    function randomColor() {
+      r = Math.floor(Math.random() * 256);
+      g = Math.floor(Math.random() * 256);
+      b = Math.floor(Math.random() * 256);
+      hex = (r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0')).toUpperCase();
+      rgbToHsl();
+      updateAll();
+    }
+    
+    function copy(text) {
+      navigator.clipboard.writeText(text);
+      document.getElementById('preview').textContent = 'Copied!';
+      setTimeout(() => updateAll(), 800);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Formatter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin-bottom: 20px; color: #f06595; }
+    .row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 300px; }
+    textarea { width: 100%; height: 300px; background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 12px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 13px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #f06595; }
+    .label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+    .output { background: #16213e; border: 1px solid #0f3460; padding: 12px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 13px; white-space: pre-wrap; min-height: 300px; overflow: auto; }
+    .buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { background: #f06595; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: opacity 0.2s; }
+    button:hover { opacity: 0.8; }
+    button.secondary { background: #0f3460; }
+    .keyword { color: #cc5de8; font-weight: 600; }
+    .string { color: #51cf66; }
+    .number { color: #fcc419; }
+    .comment { color: #666; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 SQL Formatter</h1>
+    <div class="row">
+      <div class="col">
+        <label class="label">Input SQL</label>
+        <textarea id="input" placeholder="SELECT * FROM users WHERE active=1 AND created_at>'2024-01-01' ORDER BY name LIMIT 10"></textarea>
+      </div>
+      <div class="col">
+        <label class="label">Formatted</label>
+        <div id="output" class="output"></div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="format()">Format</button>
+      <button class="secondary" onclick="minify()">Minify</button>
+      <button class="secondary" onclick="copy()">Copy</button>
+    </div>
+  </div>
+  <script>
+    const SQL_KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON', 'GROUP', 'BY', 'ORDER', 'HAVING', 'LIMIT', 'OFFSET', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE', 'TABLE', 'DROP', 'ALTER', 'INDEX', 'AS', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN', 'ASC', 'DESC', 'NULL', 'IS', 'TRUE', 'FALSE', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'UNION', 'ALL', 'EXISTS'];
+    
+    function formatSQL(sql, minify = false) {
+      if (!sql.trim()) return '';
+      
+      let result = sql.trim();
+      
+      // Remove comments
+      result = result.replace(/--.*$/gm, '');
+      result = result.replace(/\/\*[\s\S]*?\*\//g, '');
+      
+      if (minify) {
+        return result.replace(/\s+/g, ' ').trim();
+      }
+      
+      // Uppercase keywords
+      SQL_KEYWORDS.forEach(kw => {
+        const regex = new RegExp('\\b' + kw + '\\b', 'gi');
+        result = result.replace(regex, kw);
+      });
+      
+      // Add newlines before major keywords
+      const newlineKeywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'GROUP', 'ORDER', 'HAVING', 'LIMIT', 'INSERT', 'UPDATE', 'DELETE', 'UNION'];
+      newlineKeywords.forEach(kw => {
+        const regex = new RegExp('\\b(' + kw + ')\\b', 'gi');
+        result = result.replace(regex, '\n$1');
+      });
+      
+      // Clean up whitespace
+      result = result.replace(/\n\s*\n/g, '\n');
+      result = result.replace(/\s*,\s*/g, ',\n  ');
+      result = result.replace(/\(\s+/g, '(');
+      result = result.replace(/\s+\)/g, ')');
+      
+      return result.trim();
+    }
+    
+    function highlight(sql) {
+      return sql
+        .replace(/'[^']*'/g, '<span class="string">$&</span>')
+        .replace(/\b\d+\b/g, '<span class="number">$&</span>')
+        .replace(/--.*$/gm, '<span class="comment">$&</span>')
+        .replace(new RegExp('\\b(' + SQL_KEYWORDS.join('|') + ')\\b', 'gi'), '<span class="keyword">$1</span>');
+    }
+    
+    function format() {
+      const sql = document.getElementById('input').value;
+      const formatted = formatSQL(sql);
+      document.getElementById('output').innerHTML = highlight(formatted);
+    }
+    
+    function minify() {
+      const sql = document.getElementById('input').value;
+      document.getElementById('output').textContent = formatSQL(sql, true);
+    }
+    
+    function copy() {
+      navigator.clipboard.writeText(document.getElementById('output').textContent);
+    }
+    
+    document.getElementById('input').addEventListener('input', format);
+  </script>
+</body>
+</html>

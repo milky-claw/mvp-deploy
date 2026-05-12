@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encoder/Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+    textarea { width: 100%; height: 150px; background: #0f0f23; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 1rem; font-family: monospace; font-size: 14px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .btn-group { display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    button:active { transform: scale(0.98); }
+    button.secondary { background: #333; color: #fff; }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .tab { background: #333; color: #aaa; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: none; }
+    .tab.active { background: #00d9ff; color: #1a1a2e; }
+    .output { background: #0f3460; padding: 1rem; border-radius: 8px; margin-top: 1rem; word-break: break-all; }
+    .error { color: #ff6b6b; }
+    .copy-btn { background: #4a4a6a; color: #fff; font-size: 12px; padding: 0.4rem 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Base64 Encoder/Decoder</h1>
+    
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="setMode('encode')">Encode</button>
+        <button class="tab" onclick="setMode('decode')">Decode</button>
+      </div>
+      
+      <textarea id="input" placeholder="Enter text to encode/decode..."></textarea>
+      
+      <div class="btn-group">
+        <button onclick="process()">Convert</button>
+        <button class="secondary" onclick="clearAll()">Clear</button>
+        <button class="secondary" onclick="swap()">Swap</button>
+      </div>
+      
+      <div id="output" class="output" style="display:none;"></div>
+    </div>
+    
+    <div class="card">
+      <h3>Quick Actions</h3>
+      <div class="btn-group">
+        <button class="secondary" onclick="sampleEncode()">Sample Encode</button>
+        <button class="secondary" onclick="sampleDecode()">Sample Decode</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let mode = 'encode';
+    
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      clearAll();
+    }
+    
+    function process() {
+      const input = document.getElementById('input').value;
+      const output = document.getElementById('output');
+      
+      if (!input.trim()) {
+        output.style.display = 'block';
+        output.innerHTML = '<span class="error">Please enter some text</span>';
+        return;
+      }
+      
+      try {
+        let result;
+        if (mode === 'encode') {
+          result = btoa(unescape(encodeURIComponent(input)));
+        } else {
+          result = decodeURIComponent(escape(atob(input)));
+        }
+        
+        output.style.display = 'block';
+        output.innerHTML = `<strong>Result:</strong><br>${result}<button class="copy-btn" onclick="copyResult()" style="margin-left:1rem">Copy</button>`;
+      } catch (e) {
+        output.style.display = 'block';
+        output.innerHTML = '<span class="error">Error: Invalid input for ' + mode + ' mode</span>';
+      }
+    }
+    
+    function clearAll() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').style.display = 'none';
+    }
+    
+    function swap() {
+      const input = document.getElementById('input').value;
+      const output = document.getElementById('output');
+      
+      if (output.style.display !== 'none' && output.textContent) {
+        document.getElementById('input').value = output.textContent.replace('Result:', '').replace('Copy', '').trim();
+        setMode(mode === 'encode' ? 'decode' : 'encode');
+      }
+    }
+    
+    function copyResult() {
+      const output = document.getElementById('output');
+      const text = output.textContent.replace('Result:', '').replace('Copy', '').trim();
+      navigator.clipboard.writeText(text);
+    }
+    
+    function sampleEncode() {
+      document.getElementById('input').value = 'Hello, World! 你好世界 🎉';
+      setMode('encode');
+      process();
+    }
+    
+    function sampleDecode() {
+      document.getElementById('input').value = 'SGVsbG8sIFdvcmxkIQ==';
+      setMode('decode');
+      process();
+    }
+  </script>
+</body>
+</html>

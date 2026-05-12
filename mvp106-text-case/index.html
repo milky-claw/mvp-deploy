@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Case Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .converter { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .box { flex: 1; min-width: 300px; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #aaa; }
+    textarea { width: 100%; height: 300px; background: #16213e; border: 1px solid #0f3460; border-radius: 8px; color: #fff; padding: 1rem; font-size: 1rem; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    button { padding: 0.5rem 1rem; background: #0f3460; border: none; color: #fff; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #00d9ff; color: #1a1a2e; }
+    .stats { margin-top: 1rem; padding: 1rem; background: #16213e; border-radius: 8px; }
+    .stat { display: inline-block; margin-right: 1.5rem; color: #00d9ff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔤 Text Case Converter</h1>
+    <div class="converter">
+      <div class="box">
+        <label>Input Text</label>
+        <textarea id="input" placeholder="Enter your text here..."></textarea>
+        <div class="buttons">
+          <button onclick="toUpper()">UPPERCASE</button>
+          <button onclick="toLower()">lowercase</button>
+          <button onclick="toTitle()">Title Case</button>
+          <button onclick="toSentence()">Sentence case</button>
+          <button onclick="toCamel()">camelCase</button>
+          <button onclick="toSnake()">snake_case</button>
+          <button onclick="copyOutput()">Copy Output</button>
+          <button onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+      <div class="box">
+        <label>Output</label>
+        <textarea id="output" readonly></textarea>
+        <div class="stats">
+          <span class="stat">Chars: <span id="chars">0</span></span>
+          <span class="stat">Words: <span id="words">0</span></span>
+          <span class="stat">Lines: <span id="lines">0</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+
+    function updateStats() {
+      const text = output.value;
+      document.getElementById('chars').textContent = text.length;
+      document.getElementById('words').textContent = text ? text.trim().split(/\s+/).length : 0;
+      document.getElementById('lines').textContent = text ? text.split('\n').length : 0;
+    }
+
+    function toUpper() { output.value = input.value.toUpperCase(); updateStats(); }
+    function toLower() { output.value = input.value.toLowerCase(); updateStats(); }
+    function toTitle() {
+      output.value = input.value.toLowerCase().replace(/(?:^|\s)\w/g, m => m.toUpperCase());
+      updateStats();
+    }
+    function toSentence() {
+      output.value = input.value.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, m => m.toUpperCase());
+      updateStats();
+    }
+    function toCamel() {
+      const words = input.value.toLowerCase().trim().split(/[\s_-]+/);
+      output.value = words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+      updateStats();
+    }
+    function toSnake() {
+      output.value = input.value.toLowerCase().trim().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+      updateStats();
+    }
+    function copyOutput() { navigator.clipboard.writeText(output.value); }
+    function clearAll() { input.value = ''; output.value = ''; updateStats(); }
+    input.addEventListener('input', () => { output.value = input.value; updateStats(); });
+  </script>
+</body>
+</html>

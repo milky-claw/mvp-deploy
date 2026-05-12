@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO Meta Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #00aaff; }
+    .container { max-width: 600px; width: 100%; }
+    .card { background: #1a1a1a; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 0.5rem; }
+    textarea { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; min-height: 150px; font-family: inherit; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00aaff; }
+    .btn { background: #00aaff; color: #0f0f0f; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 1rem; }
+    .btn:hover { background: #0099ee; }
+    .score-card { background: linear-gradient(135deg, #1a1a1a, #252525); padding: 2rem; border-radius: 12px; text-align: center; margin-bottom: 1rem; }
+    .score-circle { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#00aaff var(--score), #333 0); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+    .score-inner { width: 80px; height: 80px; border-radius: 50%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; }
+    .score-label { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .score-grade { color: #00aaff; }
+    .check-item { display: flex; align-items: center; padding: 0.75rem; background: #252525; border-radius: 8px; margin-bottom: 0.5rem; }
+    .check-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 0.875rem; }
+    .check-icon.pass { background: #00ff88; color: #0f0f0f; }
+    .check-icon.fail { background: #ff4444; color: #fff; }
+    .check-icon.warn { background: #ffaa00; color: #0f0f0f; }
+    .check-text { flex: 1; }
+    .check-value { color: #888; font-size: 0.875rem; }
+    .input-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .input-row input { flex: 1; padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; }
+    .input-row input:focus { outline: none; border-color: #00aaff; }
+    .char-count { text-align: right; font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
+    .char-count.ok { color: #00ff88; }
+    .char-count.warn { color: #ffaa00; }
+    .char-count.bad { color: #ff4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 SEO Meta Analyzer</h1>
+    <div class="card">
+      <label>Page URL (optional)</label>
+      <input type="url" id="url-input" placeholder="https://example.com">
+      <label>Page Title</label>
+      <input type="text" id="title-input" placeholder="Enter page title">
+      <div class="char-count" id="title-count">0 / 60</div>
+      <label>Meta Description</label>
+      <textarea id="desc-input" placeholder="Enter meta description"></textarea>
+      <div class="char-count" id="desc-count">0 / 160</div>
+      <button class="btn" id="analyze-btn">Analyze SEO</button>
+    </div>
+    <div class="score-card" id="score-card" style="display:none;">
+      <div class="score-circle">
+        <div class="score-inner" id="score-value">0</div>
+      </div>
+      <div class="score-label">SEO Score: <span class="score-grade" id="score-grade">-</span></div>
+    </div>
+    <div id="checks"></div>
+  </div>
+  <script>
+    const urlInput = document.getElementById('url-input');
+    const titleInput = document.getElementById('title-input');
+    const descInput = document.getElementById('desc-input');
+    const titleCount = document.getElementById('title-count');
+    const descCount = document.getElementById('desc-count');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const scoreCard = document.getElementById('score-card');
+    const scoreValue = document.getElementById('score-value');
+    const scoreGrade = document.getElementById('score-grade');
+    const checksDiv = document.getElementById('checks');
+
+    function updateCount(input, countEl, ideal, max) {
+      const len = input.value.length;
+      countEl.textContent = `${len} / ${max}`;
+      countEl.className = 'char-count';
+      if (len >= ideal[0] && len <= ideal[1]) countEl.classList.add('ok');
+      else if (len > 0) countEl.classList.add('warn');
+      else countEl.classList.add('bad');
+    }
+
+    titleInput.addEventListener('input', () => updateCount(titleInput, titleCount, [50, 60], 60));
+    descInput.addEventListener('input', () => updateCount(descInput, descCount, [120, 160], 160));
+
+    analyzeBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      let score = 0;
+      const checks = [];
+
+      // URL check
+      if (url) {
+        checks.push({ icon: 'pass', text: 'URL provided', value: url });
+        score += 10;
+        if (url.length <= 75) {
+          checks.push({ icon: 'pass', text: 'URL length optimal', value: `${url.length} chars` });
+          score += 10;
+        } else {
+          checks.push({ icon: 'warn', text: 'URL too long', value: `${url.length} chars (ideal: <75)` });
+        }
+      } else {
+        checks.push({ icon: 'warn', text: 'No URL provided', value: 'Optional but recommended' });
+      }
+
+      // Title checks
+      if (title) {
+        score += 15;
+        checks.push({ icon: 'pass', text: 'Title present', value: title });
+        if (title.length >= 50 && title.length <= 60) {
+          checks.push({ icon: 'pass', text: 'Title length ideal', value: `${title.length} chars` });
+          score += 15;
+        } else if (title.length < 50) {
+          checks.push({ icon: 'warn', text: 'Title too short', value: `${title.length} chars (ideal: 50-60)` });
+        } else {
+          checks.push({ icon: 'warn', text: 'Title too long', value: `${title.length} chars (ideal: 50-60)` });
+        }
+      } else {
+        checks.push({ icon: 'fail', text: 'Missing title', value: 'Required for SEO' });
+      }
+
+      // Description checks
+      if (description) {
+        score += 15;
+        checks.push({ icon: 'pass', text: 'Description present', value: description.slice(0, 50) + '...' });
+        if (description.length >= 120 && description.length <= 160) {
+          checks.push({ icon: 'pass', text: 'Description length ideal', value: `${description.length} chars` });
+          score += 15;
+        } else if (description.length < 120) {
+          checks.push({ icon: 'warn', text: 'Description too short', value: `${description.length} chars (ideal: 120-160)` });
+        } else {
+          checks.push({ icon: 'warn', text: 'Description too long', value: `${description.length} chars (ideal: 120-160)` });
+        }
+      } else {
+        checks.push({ icon: 'fail', text: 'Missing meta description', value: 'Important for CTR' });
+      }
+
+      // Keywords check (simple)
+      if (title && description) {
+        const titleLower = title.toLowerCase();
+        const descLower = description.toLowerCase();
+        const words = titleLower.split(' ').filter(w => w.length > 3);
+        const foundInDesc = words.filter(w => descLower.includes(w));
+        if (foundInDesc.length > 0) {
+          checks.push({ icon: 'pass', text: 'Keywords in description', value: `${foundInDesc.length} found` });
+          score += 10;
+        } else {
+          checks.push({ icon: 'warn', text: 'Keywords not in description', value: 'Add title keywords to description' });
+        }
+      }
+
+      // Display score
+      score = Math.min(score, 100);
+      scoreValue.textContent = score;
+      scoreCard.style.display = 'block';
+      
+      if (score >= 80) scoreGrade.textContent = 'Excellent';
+      else if (score >= 60) scoreGrade.textContent = 'Good';
+      else if (score >= 40) scoreGrade.textContent = 'Fair';
+      else scoreGrade.textContent = 'Poor';
+
+      // Render checks
+      checksDiv.innerHTML = checks.map(c => `
+        <div class="check-item">
+          <div class="check-icon ${c.icon}">${c.icon === 'pass' ? '✓' : c.icon === 'fail' ? '✗' : '!'}</div>
+          <div>
+            <div class="check-text">${c.text}</div>
+            <div class="check-value">${c.value}</div>
+          </div>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

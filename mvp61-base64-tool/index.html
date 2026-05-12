@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encoder/Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    textarea, input { width: 100%; padding: 0.75rem; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; font-family: monospace; font-size: 14px; }
+    textarea { min-height: 120px; resize: vertical; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; margin: 0.25rem; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    button:active { transform: scale(0.98); }
+    .result { background: #0f3460; padding: 1rem; border-radius: 8px; margin-top: 1rem; word-break: break-all; min-height: 60px; }
+    .error { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Base64 Tool</h1>
+    <div class="card">
+      <label>Input Text</label>
+      <textarea id="input" placeholder="Enter text to encode or decode..."></textarea>
+      <div style="margin-top: 1rem;">
+        <button id="encodeBtn">Encode</button>
+        <button id="decodeBtn">Decode</button>
+      </div>
+      <div class="result" id="output">Result will appear here...</div>
+    </div>
+  </div>
+  <script>
+    const inputEl = document.getElementById('input');
+    const outputEl = document.getElementById('output');
+    
+    function encode() {
+      try {
+        const encoded = btoa(unescape(encodeURIComponent(inputEl.value)));
+        outputEl.textContent = encoded;
+        outputEl.classList.remove('error');
+      } catch (e) {
+        outputEl.textContent = 'Error: ' + e.message;
+        outputEl.classList.add('error');
+      }
+    }
+    
+    function decode() {
+      try {
+        const decoded = decodeURIComponent(escape(atob(inputEl.value)));
+        outputEl.textContent = decoded;
+        outputEl.classList.remove('error');
+      } catch (e) {
+        outputEl.textContent = 'Error: Invalid Base64 string';
+        outputEl.classList.add('error');
+      }
+    }
+    
+    document.getElementById('encodeBtn').addEventListener('click', encode);
+    document.getElementById('decodeBtn').addEventListener('click', decode);
+    
+    // Expose for testing
+    window.base64Encode = (str) => btoa(unescape(encodeURIComponent(str)));
+    window.base64Decode = (b64) => decodeURIComponent(escape(atob(b64)));
+  </script>
+</body>
+</html>

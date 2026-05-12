@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Working Days Calculator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: #1e293b; padding: 2rem; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: #4ade80; text-align: center; }
+    .input-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8; }
+    input[type="date"] { width: 100%; padding: 0.75rem; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #e2e8f0; font-size: 1rem; }
+    input:focus { outline: none; border-color: #4ade80; }
+    .options { margin: 1rem 0; }
+    .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4ade80; }
+    .result { margin: 1.5rem 0; padding: 1.5rem; background: #0f172a; border-radius: 12px; text-align: center; }
+    .result-value { font-size: 3rem; font-weight: 700; color: #4ade80; }
+    .result-label { font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem; }
+    .breakdown { margin-top: 1rem; font-size: 0.875rem; color: #64748b; }
+    button { width: 100%; padding: 1rem; background: #4ade80; color: #0f172a; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #22c55e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📅 Working Days Calculator</h1>
+    <div class="input-group">
+      <label>Start Date</label>
+      <input type="date" id="startDate">
+    </div>
+    <div class="input-group">
+      <label>End Date</label>
+      <input type="date" id="endDate">
+    </div>
+    <div class="options">
+      <label class="checkbox-label">
+        <input type="checkbox" id="excludeWeekends" checked>
+        Exclude Weekends (Sat/Sun)
+      </label>
+    </div>
+    <div class="result">
+      <div class="result-value" id="result">0</div>
+      <div class="result-label">working days</div>
+      <div class="breakdown" id="breakdown"></div>
+    </div>
+    <button onclick="calculate()">Calculate</button>
+  </div>
+  <script>
+    const today = new Date().toISOString().split('T')[0];
+    const nextWeek = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+    document.getElementById('endDate').value = nextWeek;
+
+    function calculate() {
+      const start = new Date(document.getElementById('startDate').value);
+      const end = new Date(document.getElementById('endDate').value);
+      const excludeWeekends = document.getElementById('excludeWeekends').checked;
+      
+      if (!start || !end || end < start) {
+        document.getElementById('result').textContent = '—';
+        document.getElementById('breakdown').textContent = 'Invalid date range';
+        return;
+      }
+
+      let workingDays = 0;
+      let totalDays = 0;
+      let weekends = 0;
+      
+      const current = new Date(start);
+      while (current <= end) {
+        totalDays++;
+        const day = current.getDay();
+        if (excludeWeekends && (day === 0 || day === 6)) {
+          weekends++;
+        } else {
+          workingDays++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      document.getElementById('result').textContent = workingDays;
+      document.getElementById('breakdown').textContent = `Total: ${totalDays} days | Weekends excluded: ${weekends}`;
+    }
+
+    calculate();
+    document.querySelectorAll('input').forEach(el => el.addEventListener('change', calculate));
+  </script>
+</body>
+</html>

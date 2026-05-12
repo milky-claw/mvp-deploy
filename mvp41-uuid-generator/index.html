@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UUID Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, system-ui, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    h1 { margin-bottom: 0.5rem; color: #a855f7; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .controls { margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    button { background: #a855f7; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button:hover { background: #c084fc; }
+    button.secondary { background: #0f3460; }
+    button.secondary:hover { background: #1a4a7a; }
+    label { display: flex; align-items: center; gap: 0.5rem; }
+    input[type="number"] { background: #16213e; border: 1px solid #0f3460; color: #eee; padding: 0.5rem; border-radius: 4px; width: 80px; }
+    .uuid-list { display: flex; flex-direction: column; gap: 0.5rem; max-width: 600px; }
+    .uuid-item { background: #16213e; padding: 1rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .uuid-item code { font-family: ui-monospace, monospace; color: #22d3ee; font-size: 1.1rem; }
+    .uuid-item button { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #22c55e; color: white; padding: 1rem 1.5rem; border-radius: 8px; display: none; }
+    .toast.show { display: block; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <h1>🎲 UUID Generator</h1>
+  <p class="subtitle">Generate RFC 4122 compliant UUIDs</p>
+  
+  <div class="controls">
+    <label>Count: <input type="number" id="count" value="5" min="1" max="50"></label>
+    <button onclick="generate()">Generate UUIDs</button>
+    <button class="secondary" onclick="copyAll()">Copy All</button>
+    <button class="secondary" onclick="clearAll()">Clear</button>
+  </div>
+  
+  <div class="uuid-list" id="list"></div>
+  <div class="toast" id="toast">Copied!</div>
+  
+  <script>
+    function generate() {
+      const count = Math.min(50, Math.max(1, parseInt(document.getElementById('count').value) || 1));
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const uuid = crypto.randomUUID();
+        const div = document.createElement('div');
+        div.className = 'uuid-item';
+        div.innerHTML = `<code>${uuid}</code><button class="secondary" onclick="copy('${uuid}')">Copy</button>`;
+        list.appendChild(div);
+      }
+    }
+    function copy(text) {
+      navigator.clipboard.writeText(text);
+      showToast();
+    }
+    function copyAll() {
+      const uuids = Array.from(document.querySelectorAll('.uuid-item code')).map(el => el.textContent).join('\n');
+      if (!uuids) return;
+      navigator.clipboard.writeText(uuids);
+      showToast('All copied!');
+    }
+    function clearAll() {
+      document.getElementById('list').innerHTML = '';
+    }
+    function showToast(msg = 'Copied!') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast show';
+      setTimeout(() => toast.className = 'toast', 1500);
+    }
+    generate();
+  </script>
+</body>
+</html>

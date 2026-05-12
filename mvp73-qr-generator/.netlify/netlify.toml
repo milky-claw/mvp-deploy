@@ -1,0 +1,28 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp73-qr-generator"
+publishOrigin = "config"
+commandOrigin = "ui"
+base = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp73-qr-generator"
+
+[build.environment]
+NODE_VERSION = "18"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

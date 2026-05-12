@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UUID Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    h1 { margin-bottom: 10px; color: #00d9ff; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .controls { background: #16213e; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .count-group { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    label { font-weight: 600; }
+    input[type="number"] { width: 80px; padding: 10px; border: 1px solid #0f3460; background: #1a1a2e; color: #eee; border-radius: 6px; font-size: 16px; text-align: center; }
+    input[type="number"]:focus { outline: none; border-color: #00d9ff; }
+    button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 16px; transition: transform 0.1s; margin: 5px; }
+    button:hover { transform: scale(1.02); }
+    .btn-primary { background: #00d9ff; color: #1a1a2e; }
+    .btn-secondary { background: #e94560; color: #fff; }
+    .btn-copy { background: #0f3460; color: #eee; }
+    .btn-v1 { background: #4a4a8a; color: #eee; }
+    .results { background: #16213e; border-radius: 12px; padding: 20px; text-align: left; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .results h2 { font-size: 18px; color: #00d9ff; }
+    .uuid-list { font-family: 'Monaco', 'Menlo', monospace; font-size: 14px; max-height: 400px; overflow-y: auto; }
+    .uuid-item { padding: 8px 12px; background: #1a1a2e; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; word-break: break-all; }
+    .uuid-item:last-child { margin-bottom: 0; }
+    .uuid-item .uuid { color: #00d9ff; }
+    .uuid-item .copy-btn { background: transparent; border: 1px solid #0f3460; color: #888; padding: 4px 8px; font-size: 12px; cursor: pointer; border-radius: 4px; }
+    .uuid-item .copy-btn:hover { color: #eee; border-color: #00d9ff; }
+    .versions { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+    .version-btn { padding: 8px 16px; font-size: 14px; }
+    .version-btn.active { background: #00d9ff; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎲 UUID Generator</h1>
+    <p class="subtitle">Generate UUIDs for testing & development</p>
+    
+    <div class="controls">
+      <div class="versions">
+        <button class="version-btn active" onclick="setVersion('v4')">v4 (Random)</button>
+        <button class="version-btn" onclick="setVersion('v1')">v1 (Timestamp)</button>
+      </div>
+      <div class="count-group">
+        <label>Count:</label>
+        <input type="number" id="count" value="5" min="1" max="100">
+      </div>
+      <button class="btn-primary" onclick="generate()">Generate UUIDs</button>
+      <button class="btn-copy" onclick="copyAll()">Copy All</button>
+      <button class="btn-secondary" onclick="clearList()">Clear</button>
+    </div>
+
+    <div class="results">
+      <div class="results-header">
+        <h2>Generated UUIDs</h2>
+        <span id="total" style="color:#888">0</span>
+      </div>
+      <div class="uuid-list" id="list"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentVersion = 'v4';
+    
+    function setVersion(v) {
+      currentVersion = v;
+      document.querySelectorAll('.version-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(v));
+      });
+    }
+
+    function generateUUID_v4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function generateUUID_v1() {
+      // Simple v1: timestamp + random node
+      const now = Date.now();
+      const timeLow = (now & 0xFFFFFFFF).toString(16).padStart(8, '0');
+      const timeMid = ((now >> 32) & 0xFFFF).toString(16).padStart(4, '0');
+      const timeHi = ((now >> 48) & 0x0FFF).toString(16).padStart(4, '0');
+      const clock = Math.floor(Math.random() * 0x3F).toString(16).padStart(2, '0');
+      const node = Array.from({length: 6}, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('');
+      return `${timeLow}-${timeMid}-1${timeHi.slice(1)}-${clock}-${node}`;
+    }
+
+    function generate() {
+      const count = Math.min(Math.max(parseInt(document.getElementById('count').value) || 1, 1), 100);
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      
+      for (let i = 0; i < count; i++) {
+        const uuid = currentVersion === 'v4' ? generateUUID_v4() : generateUUID_v1();
+        const item = document.createElement('div');
+        item.className = 'uuid-item';
+        item.innerHTML = `
+          <span class="uuid">${uuid}</span>
+          <button class="copy-btn" onclick="copyOne('${uuid}')">Copy</button>
+        `;
+        list.appendChild(item);
+      }
+      document.getElementById('total').textContent = count + ' UUIDs';
+    }
+
+    function copyOne(uuid) {
+      navigator.clipboard.writeText(uuid);
+    }
+
+    function copyAll() {
+      const uuids = Array.from(document.querySelectorAll('.uuid')).map(el => el.textContent).join('\n');
+      if (uuids) navigator.clipboard.writeText(uuids);
+    }
+
+    function clearList() {
+      document.getElementById('list').innerHTML = '';
+      document.getElementById('total').textContent = '0';
+    }
+
+    // Generate 5 on load
+    generate();
+  </script>
+</body>
+</html>

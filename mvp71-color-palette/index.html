@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Generator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #ff6b9d; margin-bottom: 1.5rem; }
+        .controls { margin-bottom: 1.5rem; }
+        button { padding: 0.6rem 1.2rem; background: #ff6b9d; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 0.5rem; }
+        button:hover { background: #ff4d7f; }
+        .palette { display: flex; flex-wrap: wrap; gap: 0; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+        .color { flex: 1; min-width: 150px; height: 200px; display: flex; flex-direction: column; justify-content: flex-end; padding: 1rem; transition: transform 0.2s; cursor: pointer; }
+        .color:hover { transform: scale(1.05); z-index: 10; }
+        .color span { background: rgba(0,0,0,0.5); padding: 0.3rem 0.6rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+        .saved { background: #252540; padding: 1rem; border-radius: 8px; }
+        .saved-title { color: #aaa; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .saved-palettes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .saved-palette { display: flex; border-radius: 6px; overflow: hidden; cursor: pointer; }
+        .saved-color { width: 30px; height: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Color Palette Generator</h1>
+        <div class="controls">
+            <button onclick="generate()">Generate Palette</button>
+            <button onclick="lock()" style="background:#4a4a6a">Lock Colors</button>
+            <button onclick="save()" style="background:#2d2d4a">Save Palette</button>
+        </div>
+        <div class="palette" id="palette"></div>
+        <div class="saved">
+            <div class="saved-title">Saved Palettes</div>
+            <div class="saved-palettes" id="saved"></div>
+        </div>
+    </div>
+    <script>
+        let colors = [], locked = [];
+        
+        function randomColor() {
+            const h = Math.floor(Math.random() * 360);
+            const s = 50 + Math.floor(Math.random() * 40);
+            const l = 40 + Math.floor(Math.random() * 30);
+            return { h, s, l, hex: hslToHex(h, s, l) };
+        }
+        
+        function hslToHex(h, s, l) {
+            s /= 100; l /= 100;
+            const a = s * Math.min(l, 1 - l);
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+        
+        function generate() {
+            colors = [];
+            for (let i = 0; i < 5; i++) {
+                if (locked[i]) colors.push(locked[i]);
+                else colors.push(randomColor());
+            }
+            render();
+        }
+        
+        function lock() {
+            locked = [...colors];
+        }
+        
+        function save() {
+            const palettes = JSON.parse(localStorage.getItem('palettes') || '[]');
+            palettes.push(colors.map(c => c.hex));
+            localStorage.setItem('palettes', JSON.stringify(palettes));
+            renderSaved();
+        }
+        
+        function render() {
+            const container = document.getElementById('palette');
+            container.innerHTML = colors.map((c, i) => 
+                `<div class="color" style="background:${c.hex}" onclick="copy('${c.hex}')">
+                    <span>${c.hex}</span>
+                </div>`
+            ).join('');
+        }
+        
+        function renderSaved() {
+            const palettes = JSON.parse(localStorage.getItem('palettes') || '[]');
+            document.getElementById('saved').innerHTML = palettes.map(p => 
+                `<div class="saved-palette">${p.map(c => `<div class="saved-color" style="background:${c}"></div>`).join('')}</div>`
+            ).join('');
+        }
+        
+        function copy(hex) {
+            navigator.clipboard.writeText(hex);
+        }
+        
+        generate();
+        renderSaved();
+    </script>
+</body>
+</html>

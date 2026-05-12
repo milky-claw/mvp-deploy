@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Zone Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #ff9900; }
+    .container { max-width: 500px; width: 100%; }
+    .card { background: #1a1a1a; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 0.5rem; }
+    select, input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 1rem; margin-bottom: 1rem; }
+    select:focus, input:focus { outline: none; border-color: #ff9900; }
+    .row { display: flex; gap: 0.5rem; }
+    .row > * { flex: 1; }
+    .btn { background: #ff9900; color: #0f0f0f; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; }
+    .btn:hover { background: #ee8800; }
+    .result { background: #252525; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    .result-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
+    .result-item:last-child { border: none; }
+    .tz-label { color: #888; }
+    .tz-time { color: #ff9900; font-weight: 600; }
+    .now-btn { background: #333; color: #fff; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Time Zone Converter</h1>
+    <div class="card">
+      <label>Select Time Zone</label>
+      <select id="tz-select">
+        <option value="UTC">UTC</option>
+        <option value="America/New_York">New York (EST/EDT)</option>
+        <option value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
+        <option value="America/Chicago">Chicago (CST/CDT)</option>
+        <option value="Europe/London">London (GMT/BST)</option>
+        <option value="Europe/Paris">Paris (CET/CEST)</option>
+        <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+        <option value="Europe/Riga">Riga (EET/EEST)</option>
+        <option value="Asia/Dubai">Dubai (GST)</option>
+        <option value="Asia/Kolkata">India (IST)</option>
+        <option value="Asia/Shanghai">China (CST)</option>
+        <option value="Asia/Tokyo">Japan (JST)</option>
+        <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+      </select>
+      <label>Enter Time</label>
+      <div class="row">
+        <input type="time" id="time-input" value="12:00">
+        <input type="date" id="date-input">
+      </div>
+      <button class="btn" id="convert-btn">Convert</button>
+      <button class="btn now-btn" id="now-btn">Use Current Time</button>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const tzSelect = document.getElementById('tz-select');
+    const timeInput = document.getElementById('time-input');
+    const dateInput = document.getElementById('date-input');
+    const convertBtn = document.getElementById('convert-btn');
+    const nowBtn = document.getElementById('now-btn');
+    const resultDiv = document.getElementById('result');
+
+    // Set default date to today
+    dateInput.value = new Date().toISOString().split('T')[0];
+
+    const timeZones = [
+      { id: 'America/Los_Angeles', label: 'Los Angeles' },
+      { id: 'America/Chicago', label: 'Chicago' },
+      { id: 'America/New_York', label: 'New York' },
+      { id: 'Europe/London', label: 'London' },
+      { id: 'Europe/Riga', label: 'Riga' },
+      { id: 'Europe/Paris', label: 'Paris' },
+      { id: 'Asia/Dubai', label: 'Dubai' },
+      { id: 'Asia/Kolkata', label: 'Mumbai' },
+      { id: 'Asia/Tokyo', label: 'Tokyo' },
+      { id: 'Australia/Sydney', label: 'Sydney' },
+    ];
+
+    function convert() {
+      const selectedTz = tzSelect.value;
+      const time = timeInput.value || '12:00';
+      const date = dateInput.value || new Date().toISOString().split('T')[0];
+      const localDateTime = `${date}T${time}:00`;
+      
+      let html = '<div class="result-item"><span class="tz-label">Your Time</span><span class="tz-time">' + 
+                new Date(localDateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + '</span></div>';
+      
+      timeZones.forEach(tz => {
+        try {
+          const options = { timeZone: tz.id, hour: '2-digit', minute: '2-digit', hour12: false };
+          const timeStr = new Date(localDateTime).toLocaleTimeString('en-US', options);
+          html += `<div class="result-item"><span class="tz-label">${tz.label}</span><span class="tz-time">${timeStr}</span></div>`;
+        } catch (e) {}
+      });
+      
+      resultDiv.innerHTML = html;
+    }
+
+    convertBtn.addEventListener('click', convert);
+    nowBtn.addEventListener('click', () => {
+      const now = new Date();
+      timeInput.value = now.toTimeString().slice(0, 5);
+      dateInput.value = now.toISOString().split('T')[0];
+      convert();
+    });
+
+    convert();
+  </script>
+</body>
+</html>

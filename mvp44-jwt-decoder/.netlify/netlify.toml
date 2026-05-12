@@ -1,0 +1,28 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp44-jwt-decoder"
+publishOrigin = "config"
+commandOrigin = "config"
+base = "/Users/milky/.openclaw/workspace/mvp-deploy/mvp44-jwt-decoder"
+command = "echo Built"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

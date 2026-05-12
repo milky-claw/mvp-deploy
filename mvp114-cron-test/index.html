@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVP 114: Cron Test</title>
+  <style>
+    body { font-family: system-ui; max-width: 600px; margin: 2rem auto; padding: 1rem; background: #1a1a2e; color: #eee; }
+    h1 { color: #a78bfa; }
+    .test { background: #16213e; padding: 1rem; margin: 0.5rem 0; border-radius: 8px; }
+    .expr { color: #fbbf24; font-family: monospace; font-size: 18px; font-weight: bold; }
+    .desc { color: #60a5fa; }
+    .next { color: #4ade80; font-family: monospace; }
+    input { width: 200px; padding: 0.5rem; background: #0f0f23; color: #fff; border: 1px solid #333; }
+    button { background: #a78bfa; color: #000; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: bold; }
+    ul { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>🧪 MVP 114: Cron Test CLI</h1>
+  <div id="results"></div>
+  <hr>
+  <h3>Parse cron:</h3>
+  <input id="input" value="*/5 * * * *" placeholder="* * * * *">
+  <button onclick="parse()">Parse</button>
+  <div id="output"></div>
+  <script>
+    function describe(expr) {
+      const p = expr.trim().split(/\s+/);
+      if (p.length < 5) return "Invalid";
+      let d = [];
+      if (p[0] === "*") d.push("every minute");
+      else if (p[0].includes("/")) d.push("every " + p[0].split("/")[1] + " min");
+      else d.push("at min " + p[0]);
+      if (p[1] === "*") d.push("every hour");
+      else if (p[1].includes("/")) d.push("every " + p[1].split("/")[1] + " hrs");
+      else d.push("at " + p[1] + ":00");
+      if (p[2] !== "*") d.push("day " + p[2]);
+      if (p[3] !== "*") d.push("month " + p[3]);
+      if (p[4] !== "*") d.push("dow " + p[4]);
+      return d.join(", ");
+    }
+    function nextRuns(expr, n) {
+      const p = expr.trim().split(/\s+/);
+      let r = [], c = new Date();
+      c.setSeconds(0); c.setMilliseconds(0);
+      while (r.length < n && r.length < 100) {
+        c = new Date(c.getTime() + 60000);
+        const m = p[0] === "*" || (p[0].includes("/") && c.getMinutes() % parseInt(p[0].split("/")[1]) === 0) || c.getMinutes() == p[0];
+        const h = p[1] === "*" || c.getHours() == p[1];
+        if (m && h) r.push(c.toISOString().replace("T", " ").substring(0, 16));
+      }
+      return r;
+    }
+    const tests = ["*/5 * * * *", "0 9 * * 1-5", "0 * * * *", "30 14 1 * *"];
+    const results = document.getElementById('results');
+    tests.forEach(t => {
+      results.innerHTML += `<div class="test"><span class="expr">${t}</span><br><span class="desc">${describe(t)}</span><br><span class="next">Next: ${nextRuns(t, 3).join(", ")}</span></div>`;
+    });
+    function parse() {
+      const expr = document.getElementById('input').value;
+      document.getElementById('output').innerHTML = `<div class="test"><span class="desc">${describe(expr)}</span><ul>${nextRuns(expr, 5).map(x => `<li>${x}</li>`).join("")}</ul></div>`;
+    }
+  </script>
+</body>
+</html>

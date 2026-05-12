@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cron Expression Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #ff6b9d; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .card { background: #16213e; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { color: #ff6b9d; font-size: 1.1rem; margin-bottom: 1rem; }
+    .cron-output { background: #0f0f23; border: 2px solid #ff6b9d; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 24px; text-align: center; color: #ff6b9d; margin-bottom: 1rem; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; color: #aaa; margin-bottom: 0.5rem; font-size: 14px; }
+    .field select, .field input { background: #0f0f23; border: 1px solid #333; border-radius: 6px; padding: 0.5rem; color: #eee; width: 100%; }
+    .field-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    .field-row > div { background: #0f0f23; padding: 0.5rem; border-radius: 6px; text-align: center; }
+    .field-row label { display: block; font-size: 12px; color: #666; }
+    .field-row input { background: transparent; border: none; text-align: center; color: #ff6b9d; font-family: monospace; }
+    .description { background: #0f0f23; border-radius: 8px; padding: 1rem; color: #00d9ff; }
+    .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .presets button { background: #333; color: #eee; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 13px; }
+    .presets button:hover { background: #ff6b9d; color: #1a1a2e; }
+    .copy-btn { background: #ff6b9d; color: #1a1a2e; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .next-runs { margin-top: 1rem; color: #666; font-size: 14px; }
+    .next-runs li { margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏰ Cron Expression Generator</h1>
+    <p class="subtitle">Build cron expressions visually</p>
+    
+    <div class="card">
+      <h2>Quick Presets</h2>
+      <div class="presets">
+        <button onclick="setPreset('* * * * *')">Every minute</button>
+        <button onclick="setPreset('0 * * * *')">Every hour</button>
+        <button onclick="setPreset('0 0 * * *')">Daily midnight</button>
+        <button onclick="setPreset('0 9 * * *')">Daily 9 AM</button>
+        <button onclick="setPreset('0 9 * * 1-5')">Weekdays 9 AM</button>
+        <button onclick="setPreset('0 0 * * 0')">Weekly Sunday</button>
+        <button onclick="setPreset('0 0 1 * *')">Monthly 1st</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="cron-output" id="cronOutput">* * * * *</div>
+      
+      <div class="field-row">
+        <div><label>Minute</label><input type="text" id="min" value="*" oninput="update()"></div>
+        <div><label>Hour</label><input type="text" id="hour" value="*" oninput="update()"></div>
+        <div><label>Day</label><input type="text" id="day" value="*" oninput="update()"></div>
+        <div><label>Month</label><input type="text" id="month" value="*" oninput="update()"></div>
+        <div><label>Weekday</label><input type="text" id="weekday" value="*" oninput="update()"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Meaning</h2>
+      <div class="description" id="description">Runs every minute</div>
+    </div>
+    
+    <button class="copy-btn" onclick="copyCron()">Copy Expression</button>
+  </div>
+
+  <script>
+    const fields = ['min', 'hour', 'day', 'month', 'weekday'];
+    const fieldNames = ['minute', 'hour', 'day of month', 'month', 'day of week'];
+    
+    function update() {
+      const cron = fields.map(f => document.getElementById(f).value).join(' ');
+      document.getElementById('cronOutput').textContent = cron;
+      document.getElementById('description').textContent = describeCron(cron);
+    }
+    
+    function describeCron(cron) {
+      const parts = cron.split(' ');
+      const [min, hour, day, month, wday] = parts;
+      
+      let desc = '';
+      
+      // Minute
+      if (min === '*') desc += 'Every minute';
+      else if (min.includes('/')) desc += `Every ${min.split('/')[1]} minutes`;
+      else desc += `At minute ${min}`;
+      
+      // Hour
+      if (hour === '*') desc += ' of every hour';
+      else if (hour.includes('/')) desc += `, every ${hour.split('/')[1]} hours`;
+      else desc += ` at ${hour}:00`;
+      
+      // Day
+      if (day !== '*') desc += ` on day ${day}`;
+      
+      // Month
+      if (month !== '*') desc += ` in month ${month}`;
+      
+      // Weekday
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      if (wday !== '*') {
+        if (wday.includes('-')) {
+          const [start, end] = wday.split('-');
+          desc += ` on ${days[start]} through ${days[end]}`;
+        } else {
+          desc += ` on ${days[wday]}`;
+        }
+      } else {
+        desc += ' every day';
+      }
+      
+      return desc;
+    }
+    
+    function setPreset(cron) {
+      const parts = cron.split(' ');
+      fields.forEach((f, i) => document.getElementById(f).value = parts[i]);
+      update();
+    }
+    
+    function copyCron() {
+      const cron = document.getElementById('cronOutput').textContent;
+      navigator.clipboard.writeText(cron);
+      alert('Copied: ' + cron);
+    }
+  </script>
+</body>
+</html>
