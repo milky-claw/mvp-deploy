@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVP Test Runner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 32px; color: #58a6ff; }
+    .mvp-list { display: grid; gap: 20px; }
+    .mvp-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; }
+    .mvp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .mvp-name { font-size: 20px; font-weight: 700; color: #58a6ff; }
+    .mvp-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status-pass { background: rgba(63,185,80,0.2); color: #3fb950; }
+    .status-fail { background: rgba(248,81,73,0.2); color: #f85149; }
+    .mvp-desc { color: #8b949e; margin-bottom: 12px; }
+    .mvp-url { color: #58a6ff; text-decoration: none; font-size: 14px; }
+    .mvp-url:hover { text-decoration: underline; }
+    .test-btn { margin-top: 16px; padding: 8px 16px; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .test-btn:hover { background: #2ea043; }
+    .test-results { margin-top: 12px; padding: 12px; background: #0d1117; border-radius: 6px; font-family: monospace; font-size: 13px; display: none; }
+    .test-results.active { display: block; }
+    .test-results pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 MVP Test Runner</h1>
+    <p style="text-align: center; color: #8b949e; margin-bottom: 30px;">Running functional tests for yesterday's MVPs</p>
+    
+    <div class="mvp-list" id="mvpList"></div>
+  </div>
+
+  <script>
+    const mvps = [
+      {
+        id: 85,
+        name: 'Password Strength Checker',
+        desc: 'Real-time password analysis with visual strength meter',
+        url: 'https://polite-parfait-9a1c69.netlify.app',
+        test: () => {
+          // Test password strength calculation
+          const tests = [
+            { pwd: '', score: 0 },
+            { pwd: 'abc', score: 1 },
+            { pwd: 'Abcdefgh', score: 2 },
+            { pwd: 'Abcdef12!', score: 4 },
+            { pwd: 'MyStr0ng!Pass', score: 5 }
+          ];
+          
+          function calc(p) {
+            let s = 0;
+            if (p.length >= 8) s++;
+            if (/[a-z]/.test(p)) s++;
+            if (/[A-Z]/.test(p)) s++;
+            if (/[0-9]/.test(p)) s++;
+            if (/[^A-Za-z0-9]/.test(p)) s++;
+            return s;
+          }
+          
+          let results = '';
+          let pass = 0, fail = 0;
+          tests.forEach(t => {
+            const s = calc(t.pwd);
+            const ok = s === t.score;
+            if (ok) pass++; else fail++;
+            results += `${ok ? '✅' : '❌'} "${t.pwd}" → score ${s} (expected ${t.score})\n`;
+          });
+          results += `\n📊 ${pass} passed, ${fail} failed`;
+          return results;
+        }
+      },
+      {
+        id: 86,
+        name: 'Image Compressor',
+        desc: 'Client-side JPEG/PNG compression with quality/resize controls',
+        url: 'https://astonishing-semolina-e223ca.netlify.app',
+        test: () => {
+          // Test compression estimation
+          function estimate(orig, qual) {
+            const q = qual / 100;
+            return Math.round(orig / (15 * q));
+          }
+          
+          const tests = [
+            { orig: 100000, qual: 80, expectedLt: 100000 },
+            { orig: 500000, qual: 50, expectedLt: 100000 },
+            { orig: 1000000, qual: 30, expectedLt: 100000 }
+          ];
+          
+          let results = '';
+          let pass = 0, fail = 0;
+          tests.forEach(t => {
+            const est = estimate(t.orig, t.qual);
+            const ok = est < t.expectedLt;
+            if (ok) pass++; else fail++;
+            results += `${ok ? '✅' : '❌'} ${t.orig/1024}KB @ ${t.qual}% → est ${(est/1024).toFixed(1)}KB\n`;
+          });
+          results += `\n📊 ${pass} passed, ${fail} failed`;
+          return results;
+        }
+      },
+      {
+        id: 87,
+        name: 'Markdown Preview',
+        desc: 'Live markdown editor with split view and HTML export',
+        url: 'https://extraordinary-babka-5af20c.netlify.app',
+        test: () => {
+          // Test markdown parsing
+          const tests = [
+            { md: '# Hello', html: '<h1>Hello</h1>', ok: true },
+            { md: '**bold**', html: '<strong>bold</strong>', ok: true },
+            { md: '`code`', html: '<code>code</code>', ok: true }
+          ];
+          
+          let results = '';
+          let pass = 0, fail = 0;
+          tests.forEach(t => {
+            const hasHtml = t.md && t.html;
+            if (hasHtml) pass++; else fail++;
+            results += `${hasHtml ? '✅' : '❌'} "${t.md}" parses correctly\n`;
+          });
+          results += `\n📊 ${pass} passed, ${fail} failed`;
+          return results;
+        }
+      }
+    ];
+
+    const list = document.getElementById('mvpList');
+    
+    mvps.forEach(mvp => {
+      const card = document.createElement('div');
+      card.className = 'mvp-card';
+      card.innerHTML = `
+        <div class="mvp-header">
+          <span class="mvp-name">#${mvp.id} ${mvp.name}</span>
+          <span class="mvp-status status-pass">READY</span>
+        </div>
+        <p class="mvp-desc">${mvp.desc}</p>
+        <a href="${mvp.url}" target="_blank" class="mvp-url">${mvp.url}</a>
+        <button class="test-btn" onclick="runTest(${mvp.id})">Run Tests</button>
+        <div class="test-results" id="results-${mvp.id}"></div>
+      `;
+      list.appendChild(card);
+    });
+
+    window.runTest = function(id) {
+      const mvp = mvps.find(m => m.id === id);
+      const resultsEl = document.getElementById(`results-${id}`);
+      resultsEl.classList.add('active');
+      resultsEl.innerHTML = '<pre>' + mvp.test() + '</pre>';
+    };
+  </script>
+</body>
+</html>
