@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random String Generator - MVP 126</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { color: #a855f7; margin-bottom: 10px; }
+    .description { color: #888; margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    input[type="number"], select { width: 100%; background: #16213e; border: 1px solid #333; color: #eee; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 15px; }
+    input:focus, select:focus { outline: none; border-color: #a855f7; }
+    .options { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+    .checkbox-label input { width: auto; margin: 0; }
+    button { background: #a855f7; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 16px; margin-right: 10px; margin-bottom: 10px; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    button.secondary { background: #333; }
+    button.refresh { background: #22c55e; }
+    #result { background: #16213e; padding: 20px; border-radius: 8px; margin-top: 15px; font-family: 'Monaco', 'Menlo', monospace; font-size: 18px; word-break: break-all; min-height: 60px; display: flex; align-items: center; }
+    .length-info { color: #666; font-size: 14px; margin-top: 5px; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #00ff88; color: #1a1a2e; padding: 12px 20px; border-radius: 8px; font-weight: 600; transform: translateY(100px); transition: transform 0.3s; }
+    .toast.show { transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Random String Generator 🎲</h1>
+    <p class="description">Generate random strings for passwords, tokens, IDs</p>
+    
+    <label>Length</label>
+    <input type="number" id="length" value="16" min="1" max="1000">
+    
+    <label>Character Set</label>
+    <div class="options">
+      <label class="checkbox-label">
+        <input type="checkbox" id="uppercase" checked> A-Z
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="lowercase" checked> a-z
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="numbers" checked> 0-9
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="symbols" checked> !@#$%^&*
+      </label>
+    </div>
+    
+    <button onclick="generate()">Generate</button>
+    <button class="secondary" onclick="copy()">Copy</button>
+    <button class="refresh" onclick="generate()">↻ New</button>
+    
+    <div id="result"></div>
+    <div class="length-info" id="lengthInfo"></div>
+  </div>
+  
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    const result = document.getElementById('result');
+    const lengthInfo = document.getElementById('lengthInfo');
+    
+    const CHAR_SETS = {
+      uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      lowercase: 'abcdefghijklmnopqrstuvwxyz',
+      numbers: '0123456789',
+      symbols: '!@#$%^&*'
+    };
+    
+    function generate() {
+      const length = parseInt(document.getElementById('length').value) || 16;
+      
+      let charset = '';
+      for (const id of ['uppercase', 'lowercase', 'numbers', 'symbols']) {
+        if (document.getElementById(id).checked) {
+          charset += CHAR_SETS[id];
+        }
+      }
+      
+      if (!charset) {
+        result.textContent = 'Select at least one character set';
+        return;
+      }
+      
+      let str = '';
+      const arr = new Uint32Array(length);
+      crypto.getRandomValues(arr);
+      for (let i = 0; i < length; i++) {
+        str += charset[arr[i] % charset.length];
+      }
+      
+      result.textContent = str;
+      lengthInfo.textContent = `Length: ${str.length} | Entropy: ~${Math.log2(Math.pow(charset.length, length)).toFixed(1)} bits`;
+    }
+    
+    function copy() {
+      if (!result.textContent || result.textContent.includes('Select')) return;
+      navigator.clipboard.writeText(result.textContent);
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+    
+    document.querySelectorAll('input').forEach(el => el.addEventListener('change', generate));
+    
+    generate();
+  </script>
+</body>
+</html>

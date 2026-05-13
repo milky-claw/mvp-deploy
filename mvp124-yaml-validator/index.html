@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YAML Validator - MVP 124</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #00d9ff; margin-bottom: 10px; }
+    .description { color: #888; margin-bottom: 20px; }
+    .editor { display: flex; gap: 20px; flex-wrap: wrap; }
+    .panel { flex: 1; min-width: 300px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    textarea { width: 100%; height: 300px; background: #16213e; border: 1px solid #333; color: #eee; padding: 12px; font-family: monospace; font-size: 14px; border-radius: 8px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .buttons { margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    button.secondary { background: #333; color: #eee; }
+    #result { background: #16213e; padding: 15px; border-radius: 8px; margin-top: 15px; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
+    .valid { border-left: 4px solid #00ff88; }
+    .invalid { border-left: 4px solid #ff4757; }
+    .error { color: #ff4757; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>YAML Validator ⛓️</h1>
+    <p class="description">Validate and parse YAML syntax</p>
+    
+    <div class="editor">
+      <div class="panel">
+        <label>Input YAML</label>
+        <textarea id="input" placeholder="name: John Doe&#10;age: 30&#10;skills:&#10;  - JavaScript&#10;  - Python">name: John Doe
+age: 30
+skills:
+  - JavaScript
+  - Python</textarea>
+      </div>
+      <div class="panel">
+        <label>Parsed JSON Output</label>
+        <textarea id="output" readonly placeholder="Output will appear here..."></textarea>
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button onclick="validate()">Validate & Parse</button>
+      <button class="secondary" onclick="format()">Format JSON</button>
+      <button class="secondary" onclick="clearAll()">Clear</button>
+    </div>
+    
+    <div id="result"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const result = document.getElementById('result');
+    
+    function validate() {
+      const yaml = input.value.trim();
+      if (!yaml) {
+        showResult('Please enter YAML to validate', false);
+        return;
+      }
+      try {
+        const parsed = jsyaml.load(yaml);
+        output.value = JSON.stringify(parsed, null, 2);
+        showResult('✓ Valid YAML', true);
+      } catch (e) {
+        output.value = '';
+        showResult('✗ Invalid YAML: ' + e.message, false);
+      }
+    }
+    
+    function format() {
+      validate();
+      if (output.value) {
+        try {
+          const parsed = JSON.parse(output.value);
+          output.value = JSON.stringify(parsed, null, 2);
+        } catch (e) {}
+      }
+    }
+    
+    function clearAll() {
+      input.value = '';
+      output.value = '';
+      result.innerHTML = '';
+    }
+    
+    function showResult(msg, valid) {
+      result.textContent = msg;
+      result.className = valid ? 'valid' : 'invalid';
+    }
+    
+    // Auto-validate on input change
+    input.addEventListener('input', () => { if (input.value.trim()) validate(); });
+  </script>
+</body>
+</html>

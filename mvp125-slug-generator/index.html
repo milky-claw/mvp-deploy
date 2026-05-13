@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slug Generator - MVP 125</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { color: #ff6b9d; margin-bottom: 10px; }
+    .description { color: #888; margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    input, select { width: 100%; background: #16213e; border: 1px solid #333; color: #eee; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 15px; }
+    input:focus, select:focus { outline: none; border-color: #ff6b9d; }
+    .options { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .checkbox-label input { width: auto; margin: 0; }
+    button { background: #ff6b9d; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 16px; margin-right: 10px; margin-bottom: 10px; transition: transform 0.1s; }
+    button:hover { transform: scale(1.02); }
+    button.secondary { background: #333; color: #eee; }
+    #result { background: #16213e; padding: 15px; border-radius: 8px; margin-top: 15px; font-family: monospace; word-break: break-all; }
+    .history { margin-top: 20px; }
+    .history h3 { color: #888; margin-bottom: 10px; font-size: 14px; }
+    .history-item { background: #16213e; padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .history-item:hover { background: #233050; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #00ff88; color: #1a1a2e; padding: 12px 20px; border-radius: 8px; font-weight: 600; transform: translateY(100px); transition: transform 0.3s; }
+    .toast.show { transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Slug Generator 🔗</h1>
+    <p class="description">Convert text to URL-friendly slugs</p>
+    
+    <label>Input Text</label>
+    <input type="text" id="input" placeholder="Hello World! How Are You?" value="Hello World! How Are You?">
+    
+    <div class="options">
+      <label class="checkbox-label">
+        <input type="checkbox" id="lowercase" checked> Lowercase
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="trim" checked> Trim extra dashes
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="numbers" checked> Keep numbers
+      </label>
+    </div>
+    
+    <label>Separator</label>
+    <select id="separator">
+      <option value="-">Dash (-)</option>
+      <option value="_">Underscore (_)</option>
+      <option value=".">Dot (.)</option>
+    </select>
+    
+    <button onclick="generate()">Generate Slug</button>
+    <button class="secondary" onclick="copy()">Copy</button>
+    
+    <div id="result"></div>
+    
+    <div class="history">
+      <h3>Recent Slugs</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    const input = document.getElementById('input');
+    const result = document.getElementById('result');
+    const historyList = document.getElementById('historyList');
+    let history = JSON.parse(localStorage.getItem('slugHistory') || '[]');
+    
+    function generate() {
+      let text = input.value.trim();
+      if (!text) {
+        result.textContent = 'Please enter text';
+        return;
+      }
+      
+      const sep = document.getElementById('separator').value;
+      const lower = document.getElementById('lowercase').checked;
+      const trim = document.getElementById('trim').checked;
+      const numbers = document.getElementById('numbers').checked;
+      
+      // Convert based on options
+      let slug = text;
+      if (lower) slug = slug.toLowerCase();
+      
+      // Replace spaces and special chars with separator
+      slug = slug.replace(/[\s\u200B-\u200D\uFEFF]+/g, sep);
+      if (!numbers) slug = slug.replace(/[0-9]/g, '');
+      slug = slug.replace(/[^a-z0-9_-]/gi, '');
+      
+      if (trim) {
+        slug = slug.replace(new RegExp(`\\${sep}+`, 'g'), sep);
+        slug = new RegExp(`^\\${sep}|\\${sep}$`, 'g').test(slug) ? slug.replace(new RegExp(`^\\${sep}|\\${sep}$`, 'g'), '') : slug;
+      }
+      
+      result.textContent = slug;
+      addToHistory(slug);
+    }
+    
+    function addToHistory(slug) {
+      if (!slug || history.includes(slug)) return;
+      history.unshift(slug);
+      if (history.length > 10) history.pop();
+      localStorage.setItem('slugHistory', JSON.stringify(history));
+      renderHistory();
+    }
+    
+    function renderHistory() {
+      historyList.innerHTML = history.map(s => 
+        `<div class="history-item" onclick="useHistory('${s}')">${s}</div>`
+      ).join('');
+    }
+    
+    function useHistory(s) {
+      input.value = s;
+      generate();
+    }
+    
+    function copy() {
+      if (!result.textContent) return;
+      navigator.clipboard.writeText(result.textContent);
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+    
+    // Auto-generate on input
+    input.addEventListener('input', generate);
+    document.querySelectorAll('input[type=checkbox], select').forEach(el => el.addEventListener('change', generate));
+    
+    renderHistory();
+    generate();
+  </script>
+</body>
+</html>
