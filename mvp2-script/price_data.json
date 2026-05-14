@@ -1,0 +1,46 @@
+{
+  "leafeon-vmax-hr": {
+    "name": "Leafeon VMAX HR",
+    "local_price": 13,
+    "market_value": 100,
+    "profit": 87,
+    "margin": 87.0,
+    "url": "https://andelemandele.lv",
+    "source": "andele",
+    "added": "2026-03-02T04:04:03.658303",
+    "last_checked": "2026-03-02T04:04:03.658313"
+  },
+  "charizard-vmax-alt-art": {
+    "name": "Charizard VMAX alt art",
+    "local_price": 25,
+    "market_value": 180,
+    "profit": 155,
+    "margin": 86.1,
+    "url": "https://ss.lv",
+    "source": "ss.lv",
+    "added": "2026-03-02T04:04:03.658852",
+    "last_checked": "2026-03-02T04:04:03.658858"
+  },
+  "iphone-13-pro-max": {
+    "name": "iPhone 13 Pro Max",
+    "local_price": 450,
+    "market_value": 650,
+    "profit": 200,
+    "margin": 30.8,
+    "url": "https://ss.lv",
+    "source": "ss.lv",
+    "added": "2026-03-02T04:04:03.659200",
+    "last_checked": "2026-03-02T04:04:03.659204"
+  },
+  "macbook-pro-m1": {
+    "name": "MacBook Pro M1",
+    "local_price": 700,
+    "market_value": 950,
+    "profit": 250,
+    "margin": 26.3,
+    "url": "https://ss.lv",
+    "source": "ss.lv",
+    "added": "2026-03-02T04:04:03.659520",
+    "last_checked": "2026-03-02T04:04:03.659524"
+  }
+}

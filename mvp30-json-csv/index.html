@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON ↔ CSV Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    h1 { text-align: center; margin-bottom: 1.5rem; color: #0f3460; }
+    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+    .panel { background: #16213e; border-radius: 12px; padding: 1.5rem; }
+    h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #00d9ff; }
+    textarea { width: 100%; height: 300px; padding: 1rem; border: 2px solid #333; border-radius: 8px; background: #0f0f23; color: #eee; font-family: monospace; font-size: 0.875rem; resize: vertical; }
+    textarea:focus { outline: none; border-color: #00d9ff; }
+    .controls { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; transition: opacity 0.2s; }
+    button:hover { opacity: 0.9; }
+    .btn-primary { background: #00d9ff; color: #1a1a2e; font-weight: bold; }
+    .btn-secondary { background: #333; color: #eee; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .error { color: #ff4757; font-size: 0.875rem; margin-top: 0.5rem; }
+    .success { color: #27ae60; font-size: 0.875rem; margin-top: 0.5rem; }
+    .arrow { display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>🔄 JSON ↔ CSV Converter</h1>
+  <div class="container">
+    <div class="panel">
+      <h2>JSON Input</h2>
+      <textarea id="jsonInput" placeholder='[{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]'></textarea>
+      <div class="controls">
+        <button class="btn-primary" onclick="jsonToCsv()">JSON → CSV</button>
+        <button class="btn-secondary" onclick="sampleJson()">Load Sample</button>
+        <button class="btn-secondary" onclick="document.getElementById('jsonInput').value = ''">Clear</button>
+      </div>
+      <div id="jsonError" class="error"></div>
+    </div>
+    
+    <div class="panel">
+      <h2>CSV Output</h2>
+      <textarea id="csvOutput" placeholder="name,age&#10;Alice,30&#10;Bob,25"></textarea>
+      <div class="controls">
+        <button class="btn-success" onclick="csvToJson()">CSV → JSON</button>
+        <button class="btn-secondary" onclick="downloadCsv()">Download CSV</button>
+        <button class="btn-secondary" onclick="document.getElementById('csvOutput').value = ''">Clear</button>
+      </div>
+      <div id="csvError" class="error"></div>
+    </div>
+  </div>
+
+  <script>
+    const jsonInput = document.getElementById('jsonInput');
+    const csvOutput = document.getElementById('csvOutput');
+    const jsonError = document.getElementById('jsonError');
+    const csvError = document.getElementById('csvError');
+
+    function jsonToCsv() {
+      jsonError.textContent = '';
+      csvError.textContent = '';
+      try {
+        let data = JSON.parse(jsonInput.value.trim());
+        if (!Array.isArray(data)) data = [data];
+        if (data.length === 0) { csvOutput.value = ''; return; }
+        const headers = [...new Set(data.flatMap(obj => Object.keys(obj)))];
+        const csvRows = [headers.join(',')];
+        for (const row of data) {
+          csvRows.push(headers.map(h => {
+            const val = row[h] ?? '';
+            const str = String(val);
+            return str.includes(',') || str.includes('"') || str.includes('\n') 
+              ? `"${str.replace(/"/g, '""')}"` 
+              : str;
+          }).join(','));
+        }
+        csvOutput.value = csvRows.join('\n');
+      } catch (e) {
+        jsonError.textContent = 'Invalid JSON: ' + e.message;
+      }
+    }
+
+    function csvToJson() {
+      jsonError.textContent = '';
+      csvError.textContent = '';
+      try {
+        const lines = csvOutput.value.trim().split('\n');
+        if (lines.length < 2) { jsonError.textContent = 'CSV needs header + data'; return; }
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const result = [];
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]);
+          const obj = {};
+          headers.forEach((h, idx) => obj[h] = values[idx] || '');
+          result.push(obj);
+        }
+        jsonInput.value = JSON.stringify(result, null, 2);
+      } catch (e) {
+        csvError.textContent = 'Invalid CSV: ' + e.message;
+      }
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') { inQuotes = !inQuotes; }
+        else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+        else { current += char; }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    function sampleJson() {
+      jsonInput.value = JSON.stringify([
+        { "name": "Alice", "email": "alice@example.com", "role": "Admin" },
+        { "name": "Bob", "email": "bob@example.com", "role": "User" },
+        { "name": "Charlie", "email": "charlie@example.com", "role": "User" }
+      ], null, 2);
+    }
+
+    function downloadCsv() {
+      const blob = new Blob([csvOutput.value], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

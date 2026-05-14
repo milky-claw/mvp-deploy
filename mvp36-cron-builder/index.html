@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cron Expression Builder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { text-align: center; color: #34d399; margin-bottom: 1.5rem; }
+    .panel { background: #1e293b; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    .field { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.875rem; }
+    select, input { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #e2e8f0; font-size: 1rem; }
+    select:focus, input:focus { outline: none; border-color: #34d399; }
+    .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .row select { flex: 1; min-width: 140px; }
+    .cron-display { background: #0f172a; padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1rem; }
+    .cron-expr { font-family: monospace; font-size: 1.75rem; color: #34d399; letter-spacing: 4px; }
+    .human { color: #64748b; margin-top: 0.5rem; font-size: 0.9rem; }
+    button { padding: 12px 24px; background: #34d399; color: #0f172a; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+    button:hover { background: #10b981; }
+    .presets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .preset { padding: 6px 12px; background: #334155; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
+    .preset:hover { background: #475569; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏰ Cron Builder</h1>
+    
+    <div class="panel">
+      <label>Quick Presets</label>
+      <div class="presets">
+        <span class="preset" onclick="setCron('0 * * * *')">Every hour</span>
+        <span class="preset" onclick="setCron('0 0 * * *')">Daily midnight</span>
+        <span class="preset" onclick="setCron('0 9 * * 1-5')">Weekdays 9AM</span>
+        <span class="preset" onclick="setCron('*/15 * * * *')">Every 15 min</span>
+        <span class="preset" onclick="setCron('0 0 * * 0')">Weekly Sunday</span>
+      </div>
+      
+      <div class="cron-display">
+        <div class="cron-expr" id="expr">* * * * *</div>
+        <div class="human" id="human">Every minute</div>
+      </div>
+      
+      <div class="field">
+        <label>Minute</label>
+        <select id="minute" onchange="update()"></select>
+      </div>
+      <div class="field">
+        <label>Hour</label>
+        <select id="hour" onchange="update()"></select>
+      </div>
+      <div class="field">
+        <label>Day of Month</label>
+        <select id="dom" onchange="update()"></select>
+      </div>
+      <div class="field">
+        <label>Month</label>
+        <select id="month" onchange="update()"></select>
+      </div>
+      <div class="field">
+        <label>Day of Week</label>
+        <select id="dow" onchange="update()"></select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const opts = {
+      minute: ['*', ...Array.from({length:60},(_,i)=>i.toString()), '0,30', '0,15,30,45'],
+      hour: ['*', ...Array.from({length:24},(_,i)=>i.toString())],
+      dom: ['*', ...Array.from({length:31},(_,i)=>(i+1).toString())],
+      month: ['*', '1','2','3','4','5','6','7','8','9','10','11','12'],
+      dow: ['*', '0','1','2','3','4','5','6', '1-5', '0,6']
+    };
+    
+    ['minute','hour','dom','month','dow'].forEach(id => {
+      const sel = document.getElementById(id);
+      opts[id].forEach(v => sel.add(new Option(v === '*' ? '* (every)' : v, v)));
+    });
+    
+    function update() {
+      const m = document.getElementById('minute').value;
+      const h = document.getElementById('hour').value;
+      const d = document.getElementById('dom').value;
+      const mon = document.getElementById('month').value;
+      const dow = document.getElementById('dow').value;
+      document.getElementById('expr').textContent = `${m} ${h} ${d} ${mon} ${dow}`;
+      document.getElementById('human').textContent = describe(m, h, d, mon, dow);
+    }
+    
+    function describe(m, h, d, mon, dow) {
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      let parts = [];
+      if (m === '*' && h === '*') parts.push('Every minute');
+      else if (m === '*') parts.push(`Every minute past ${h}:00`);
+      else if (m === '0' && h === '*') parts.push('Every hour at minute 0');
+      else if (h === '*') parts.push(`At minute ${m} of every hour`);
+      else if (m !== '*' && h !== '*') parts.push(`At ${h.padStart(2,'0')}:${m.padStart(2,'0')}`);
+      
+      if (d !== '*') parts.push(`on day ${d}`);
+      if (mon !== '*') parts.push(`in ${months[parseInt(mon)] || mon}`);
+      if (dow !== '*') parts.push(`on ${dow.split('-').map(x=>days[parseInt(x)]||x).join('-')}`);
+      
+      return parts.join(' ') || 'Custom schedule';
+    }
+    
+    function setCron(expr) {
+      const [m,h,d,mon,dow] = expr.split(' ');
+      document.getElementById('minute').value = m;
+      document.getElementById('hour').value = h;
+      document.getElementById('dom').value = d;
+      document.getElementById('month').value = mon;
+      document.getElementById('dow').value = dow;
+      update();
+    }
+    
+    update();
+  </script>
+</body>
+</html>

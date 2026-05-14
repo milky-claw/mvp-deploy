@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encoder/Decoder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; color: #a78bfa; margin-bottom: 1.5rem; }
+    .panel { background: #1e293b; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.875rem; }
+    textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #e2e8f0; font-family: monospace; font-size: 0.9rem; resize: vertical; }
+    textarea:focus { outline: none; border-color: #a78bfa; }
+    .btn-group { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+    button { padding: 10px 20px; background: #a78bfa; color: #0f172a; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #8b5cf6; }
+    button.secondary { background: #334155; color: #e2e8f0; }
+    button.secondary:hover { background: #475569; }
+    .error { color: #f87171; margin-top: 0.5rem; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔤 Base64 Tool</h1>
+    
+    <div class="panel">
+      <label>Plain Text</label>
+      <textarea id="plain" placeholder="Enter text to encode/decode..."></textarea>
+      <div class="btn-group">
+        <button onclick="encode()">Encode → Base64</button>
+        <button class="secondary" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <label>Base64</label>
+      <textarea id="base64" placeholder="Enter Base64 to decode..."></textarea>
+      <div class="btn-group">
+        <button onclick="decode()">Decode → Plain Text</button>
+        <button class="secondary" onclick="copyTo('base64')">Copy</button>
+      </div>
+      <div id="error" class="error"></div>
+    </div>
+  </div>
+
+  <script>
+    const plain = document.getElementById('plain');
+    const base64 = document.getElementById('base64');
+    const error = document.getElementById('error');
+    
+    function encode() {
+      error.textContent = '';
+      if (!plain.value) return;
+      try {
+        base64.value = btoa(unescape(encodeURIComponent(plain.value)));
+      } catch (e) { error.textContent = 'Error encoding: ' + e.message; }
+    }
+    
+    function decode() {
+      error.textContent = '';
+      if (!base64.value) return;
+      try {
+        plain.value = decodeURIComponent(escape(atob(base64.value)));
+      } catch (e) { error.textContent = 'Invalid Base64 string'; }
+    }
+    
+    function clearAll() { plain.value = ''; base64.value = ''; error.textContent = ''; }
+    
+    function copyTo(id) {
+      navigator.clipboard.writeText(document.getElementById(id).value);
+    }
+  </script>
+</body>
+</html>

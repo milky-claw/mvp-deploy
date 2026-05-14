@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Preview & Metadata Fetcher</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #e2e8f0;
+            --accent: #38bdf8;
+            --border: #334155;
+            --success: #22c55e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { color: var(--accent); margin-bottom: 0.5rem; font-size: 1.8rem; }
+        .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+        
+        .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        
+        .result { 
+            background: var(--card); 
+            border-radius: 12px; 
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            display: none;
+        }
+        .result.show { display: block; }
+        
+        .meta-item {
+            display: flex;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .meta-item:last-child { border-bottom: none; }
+        .meta-label {
+            width: 140px;
+            color: #94a3b8;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .meta-value {
+            word-break: break-all;
+        }
+        .meta-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .meta-value a:hover { text-decoration: underline; }
+        
+        .preview-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+        .og-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .og-image.show { display: block; }
+        
+        .error {
+            background: #7f1d1d;
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+        .error.show { display: block; }
+        
+        .history {
+            margin-top: 2rem;
+        }
+        .history h3 { color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .history-item {
+            background: var(--card);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            border: 1px solid transparent;
+        }
+        .history-item:hover { border-color: var(--accent); }
+        .history-url { font-size: 0.9rem; word-break: break-all; }
+        .history-time { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Preview Tool</h1>
+        <p class="subtitle">Fetch Open Graph metadata and preview link content</p>
+        
+        <div class="input-group">
+            <input type="url" id="urlInput" placeholder="https://example.com" />
+            <button onclick="fetchPreview()">Fetch Preview</button>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="result" id="result">
+            <div class="meta-item">
+                <span class="meta-label">Title</span>
+                <span class="meta-value" id="metaTitle">-</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Description</span>
+                <span class="meta-value" id="metaDesc">-</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Site Name</span>
+                <span class="meta-value" id="metaSite">-</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">URL</span>
+                <span class="meta-value"><a href="#" id="metaUrl" target="_blank">-</a></span>
+            </div>
+            <img id="ogImage" class="og-image" alt="Preview Image" />
+        </div>
+        
+        <div class="history">
+            <h3>Recent Searches</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+    
+    <script>
+        const historyKey = 'urlPreviewHistory';
+        
+        function getHistory() {
+            return JSON.parse(localStorage.getItem(historyKey) || '[]');
+        }
+        
+        function addToHistory(url) {
+            const history = getHistory();
+            history.unshift({ url, time: Date.now() });
+            if (history.length > 10) history.pop();
+            localStorage.setItem(historyKey, JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const history = getHistory();
+            const container = document.getElementById('historyList');
+            container.innerHTML = history.map((item, i) => `
+                <div class="history-item" onclick="loadFromHistory(${i})">
+                    <div class="history-url">${item.url}</div>
+                    <div class="history-time">${new Date(item.time).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+        
+        function loadFromHistory(index) {
+            const history = getHistory();
+            document.getElementById('urlInput').value = history[index].url;
+            fetchPreview();
+        }
+        
+        async function fetchPreview() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+            
+            let validUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                validUrl = 'https://' + url;
+            }
+            
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('result').classList.remove('show');
+            
+            try {
+                // Using a CORS proxy for demo - in production you'd use your own backend
+                const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(validUrl);
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (!data.contents) throw new Error('Could not fetch URL');
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+                
+                const getMeta = (name) => {
+                    return doc.querySelector(`meta[property="${name}"]`)?.content ||
+                           doc.querySelector(`meta[name="${name}"]`)?.content || '-';
+                };
+                
+                const title = doc.querySelector('title')?.text || getMeta('og:title') || '-';
+                const description = getMeta('og:description') || getMeta('description') || '-';
+                const siteName = getMeta('og:site_name') || '-';
+                const image = getMeta('og:image') || '-';
+                
+                document.getElementById('metaTitle').textContent = title;
+                document.getElementById('metaDesc').textContent = description.slice(0, 300) + (description.length > 300 ? '...' : '');
+                document.getElementById('metaSite').textContent = siteName;
+                document.getElementById('metaUrl').textContent = validUrl;
+                document.getElementById('metaUrl').href = validUrl;
+                
+                const imgEl = document.getElementById('ogImage');
+                if (image && image !== '-') {
+                    imgEl.src = image;
+                    imgEl.classList.add('show');
+                } else {
+                    imgEl.classList.remove('show');
+                }
+                
+                document.getElementById('result').classList.add('show');
+                addToHistory(validUrl);
+                
+            } catch (err) {
+                document.getElementById('error').textContent = 'Error: ' + err.message;
+                document.getElementById('error').classList.add('show');
+            }
+        }
+        
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchPreview();
+        });
+        
+        renderHistory();
+    </script>
+</body>
+</html>
