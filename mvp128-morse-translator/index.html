@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morse Code Translator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #f9ed69; }
+    .card { background: #16213e; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem; }
+    textarea { width: 100%; padding: 0.75rem; background: #0f3460; border: 1px solid #1a1a2e; border-radius: 8px; color: #fff; font-family: monospace; font-size: 1rem; min-height: 100px; }
+    textarea:focus { outline: none; border-color: #f9ed69; }
+    button { width: 100%; padding: 1rem; background: linear-gradient(135deg, #f9ed69, #f08a5d); border: none; border-radius: 8px; color: #1a1a2e; font-weight: bold; cursor: pointer; margin-top: 1rem; }
+    button:hover { transform: translateY(-2px); }
+    .result { background: #0f3460; padding: 1rem; border-radius: 8px; word-break: break-all; font-family: monospace; margin-top: 1rem; white-space: pre-wrap; }
+    .buttons-row { display: flex; gap: 1rem; }
+    .buttons-row button { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📡 Morse Code Translator</h1>
+    
+    <div class="card">
+      <label>Text to translate</label>
+      <textarea id="input" placeholder="Enter text or morse code..."></textarea>
+    </div>
+    
+    <div class="buttons-row">
+      <button onclick="toMorse()">Text → Morse</button>
+      <button onclick="toText()">Morse → Text</button>
+    </div>
+    
+    <div class="result" id="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const MORSE_CODE = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+      '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+      '9': '----.', '0': '-----', ' ': '/'
+    };
+    
+    const REVERSE_MORSE = Object.fromEntries(
+      Object.entries(MORSE_CODE).map(([k, v]) => [v, k])
+    );
+    
+    function toMorse() {
+      const input = document.getElementById('input').value.toUpperCase();
+      let result = '';
+      for (let char of input) {
+        if (MORSE_CODE[char]) {
+          result += MORSE_CODE[char] + ' ';
+        } else if (char === '\n') {
+          result += '\n';
+        }
+      }
+      showResult(result.trim());
+    }
+    
+    function toText() {
+      const input = document.getElementById('input').value.trim();
+      const words = input.split(' / ');
+      let result = '';
+      
+      for (let word of words) {
+        const codes = word.split(' ');
+        for (let code of codes) {
+          if (REVERSE_MORSE[code]) {
+            result += REVERSE_MORSE[code];
+          }
+        }
+        result += ' ';
+      }
+      
+      showResult(result.trim());
+    }
+    
+    function showResult(text) {
+      const resultEl = document.getElementById('result');
+      resultEl.textContent = text;
+      resultEl.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

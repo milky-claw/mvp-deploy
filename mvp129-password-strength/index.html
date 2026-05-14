@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength Checker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #b08dff; }
+    .card { background: #16213e; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem; background: #0f3460; border: 1px solid #1a1a2e; border-radius: 8px; color: #fff; font-size: 1.2rem; }
+    input:focus { outline: none; border-color: #b08dff; }
+    
+    .strength-bar { height: 8px; background: #0f3460; border-radius: 4px; margin-top: 1rem; overflow: hidden; }
+    .strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; border-radius: 4px; }
+    
+    .score { text-align: center; font-size: 1.5rem; font-weight: bold; margin-top: 1rem; }
+    .tips { background: #0f3460; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    .tips ul { margin-left: 1.5rem; color: #aaa; }
+    .tips li { margin: 0.5rem 0; }
+    .tips li.valid { color: #4cd137; }
+    .tips li.invalid { color: #e84118; }
+    
+    .stats { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .stat { background: #0f3460; padding: 0.75rem; border-radius: 8px; flex: 1; min-width: 100px; text-align: center; }
+    .stat-value { font-size: 1.2rem; font-weight: bold; color: #b08dff; }
+    .stat-label { font-size: 0.8rem; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔒 Password Strength Checker</h1>
+    
+    <div class="card">
+      <label>Enter password to check</label>
+      <input type="text" id="password" placeholder="Type password..." oninput="check()">
+      
+      <div class="strength-bar">
+        <div class="strength-fill" id="strengthFill"></div>
+      </div>
+      
+      <div class="score" id="score"></div>
+      
+      <div class="tips">
+        <ul>
+          <li id="tipLength">At least 8 characters</li>
+          <li id="tipUpper">Contains uppercase letter</li>
+          <li id="tipLower">Contains lowercase letter</li>
+          <li id="tipNumber">Contains number</li>
+          <li id="tipSpecial">Contains special character</li>
+        </ul>
+      </div>
+      
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="length">0</div>
+          <div class="stat-label">Characters</li>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="entropy">0</div>
+          <div class="stat-label">Bits of Entropy</li>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="crackTime">0s</div>
+          <div class="stat-label">Crack Time</li>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function check() {
+      const pwd = document.getElementById('password').value;
+      const len = pwd.length;
+      
+      // Check criteria
+      const hasUpper = /[A-Z]/.test(pwd);
+      const hasLower = /[a-z]/.test(pwd);
+      const hasNumber = /[0-9]/.test(pwd);
+      const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+      
+      document.getElementById('tipLength').className = len >= 8 ? 'valid' : 'invalid';
+      document.getElementById('tipUpper').className = hasUpper ? 'valid' : 'invalid';
+      document.getElementById('tipLower').className = hasLower ? 'valid' : 'invalid';
+      document.getElementById('tipNumber').className = hasNumber ? 'valid' : 'invalid';
+      document.getElementById('tipSpecial').className = hasSpecial ? 'valid' : 'invalid';
+      
+      // Calculate score (0-4)
+      let score = 0;
+      if (len >= 8) score++;
+      if (hasUpper) score++;
+      if (hasLower) score++;
+      if (hasNumber) score++;
+      if (hasSpecial) score++;
+      
+      // Update bar
+      const fill = document.getElementById('strengthFill');
+      const colors = ['#e84118', '#f39c12', '#f1c40f', '#4cd137', '#00d2d3'];
+      const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+      
+      fill.style.width = (score / 5 * 100) + '%';
+      fill.style.background = colors[score - 1] || colors[0];
+      document.getElementById('score').textContent = labels[score - 1] || 'Enter password';
+      document.getElementById('score').style.color = colors[score - 1] || '#aaa';
+      
+      // Stats
+      document.getElementById('length').textContent = len;
+      
+      // Entropy calculation
+      let charset = 0;
+      if (hasLower) charset += 26;
+      if (hasUpper) charset += 26;
+      if (hasNumber) charset += 10;
+      if (hasSpecial) charset += 32;
+      const entropy = charset > 0 ? Math.floor(len * Math.log2(charset)) : 0;
+      document.getElementById('entropy').textContent = entropy;
+      
+      // Crack time (assuming 10 billion guesses/sec)
+      const guesses = Math.pow(charset || 1, len);
+      const seconds = guesses / 1e10;
+      document.getElementById('crackTime').textContent = formatTime(seconds);
+    }
+    
+    function formatTime(seconds) {
+      if (seconds < 1) return '< 1s';
+      if (seconds < 60) return Math.floor(seconds) + 's';
+      if (seconds < 3600) return Math.floor(seconds/60) + 'm';
+      if (seconds < 86400) return Math.floor(seconds/3600) + 'h';
+      if (seconds < 31536000) return Math.floor(seconds/86400) + 'd';
+      if (seconds < 31536000*100) return Math.floor(seconds/31536000) + 'y';
+      return Math.floor(seconds/31536000) + 'y';
+    }
+  </script>
+</body>
+</html>
