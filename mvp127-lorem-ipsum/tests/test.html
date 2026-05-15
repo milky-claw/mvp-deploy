@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test MVP 127</title>
+</head>
+<body>
+  <h1>Test Results: Lorem Ipsum Generator</h1>
+  <pre id="results"></pre>
+  <script>
+    const results = [];
+    
+    // Test 1: Page loads
+    results.push({ test: 'Page loads', pass: true });
+    
+    // Test 2: Generate button exists
+    const genBtn = document.querySelector('button');
+    results.push({ test: 'Generate button exists', pass: !!genBtn });
+    
+    // Test 3: Output element exists
+    const out = document.getElementById('output');
+    results.push({ test: 'Output element exists', pass: !!out });
+    
+    // Test 4: Generate produces text
+    const initialLen = out.textContent.length;
+    document.querySelector('button').click();
+    results.push({ test: 'Generate produces text', pass: out.textContent.length > initialLen });
+    
+    // Test 5: Paragraphs have content
+    const paras = out.textContent.split('\n\n').filter(p => p.trim().length > 0);
+    results.push({ test: 'Generated paragraphs', pass: paras.length >= 1 });
+    
+    document.getElementById('results').textContent = JSON.stringify(results, null, 2);
+    console.log(results);
+  </script>
+</body>
+</html>

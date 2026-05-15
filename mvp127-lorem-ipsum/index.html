@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorem Ipsum Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #00d9ff; margin-bottom: 1rem; }
+    .controls { background: #16213e; padding: 1.5rem; border-radius: 12px; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    label { color: #aaa; }
+    input[type="number"] { background: #0f3460; border: 1px solid #00d9ff; color: #fff; padding: 0.5rem; border-radius: 6px; width: 80px; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #00b8d4; }
+    .output { background: #16213e; padding: 1.5rem; border-radius: 12px; min-height: 200px; line-height: 1.8; white-space: pre-wrap; }
+    .copy-btn { background: #e94560; margin-left: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Lorem Ipsum Generator</h1>
+    <div class="controls">
+      <label>Paragraphs:</label>
+      <input type="number" id="paras" value="3" min="1" max="20">
+      <button onclick="generate()">Generate</button>
+      <button class="copy-btn" onclick="copy()">Copy</button>
+    </div>
+    <div class="output" id="output">Click Generate to create placeholder text...</div>
+  </div>
+  <script>
+    const words = ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi', 'aliquip', 'ex', 'ea', 'commodo', 'consequat', 'duis', 'aute', 'irure', 'in', 'reprehenderit', 'voluptate', 'velit', 'esse', 'cillum', 'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat', 'cupidatat', 'non', 'proident', 'sunt', 'culpa', 'qui', 'officia', 'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum'];
+    
+    function generate() {
+      const n = parseInt(document.getElementById('paras').value);
+      let result = '';
+      for (let p = 0; p < n; p++) {
+        const sentences = Math.floor(Math.random() * 4) + 3;
+        let paragraph = '';
+        for (let s = 0; s < sentences; s++) {
+          const wordsInSent = Math.floor(Math.random() * 8) + 6;
+          let sent = [];
+          for (let w = 0; w < wordsInSent; w++) {
+            sent.push(words[Math.floor(Math.random() * words.length)]);
+          }
+          sent[0] = sent[0].charAt(0).toUpperCase() + sent[0].slice(1);
+          paragraph += sent.join(' ') + '. ';
+        }
+        result += paragraph + '\n\n';
+      }
+      document.getElementById('output').textContent = result.trim();
+    }
+    
+    function copy() {
+      navigator.clipboard.writeText(document.getElementById('output').textContent);
+    }
+    
+    generate();
+  </script>
+</body>
+</html>

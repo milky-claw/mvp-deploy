@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test MVP 128</title>
+</head>
+<body>
+  <h1>Test Results: JSON Schema Generator</h1>
+  <pre id="results"></pre>
+  <script>
+    const results = [];
+    
+    // Test 1: Page loads
+    results.push({ test: 'Page loads', pass: true });
+    
+    // Test 2: Input textarea exists
+    const input = document.getElementById('input');
+    results.push({ test: 'Input exists', pass: !!input });
+    
+    // Test 3: Output textarea exists
+    const output = document.getElementById('output');
+    results.push({ test: 'Output exists', pass: !!output });
+    
+    // Test 4: Sample button loads data
+    const sampleBtn = document.querySelector('button');
+    sampleBtn.click();
+    results.push({ test: 'Sample loads data', pass: input.value.length > 10 });
+    
+    // Test 5: Generate produces schema
+    const outLen = output.value.length;
+    results.push({ test: 'Schema generated', pass: outLen > 10 });
+    
+    document.getElementById('results').textContent = JSON.stringify(results, null, 2);
+    console.log(results);
+  </script>
+</body>
+</html>

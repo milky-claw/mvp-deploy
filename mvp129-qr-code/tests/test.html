@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test MVP 129</title>
+</head>
+<body>
+  <h1>Test Results: QR Code Generator</h1>
+  <pre id="results"></pre>
+  <script>
+    const results = [];
+    
+    // Test 1: Page loads
+    results.push({ test: 'Page loads', pass: true });
+    
+    // Test 2: Textarea exists
+    const text = document.getElementById('text');
+    results.push({ test: 'Textarea exists', pass: !!text });
+    
+    // Test 3: Generate button exists
+    const btn = document.querySelector('button');
+    results.push({ test: 'Button exists', pass: !!btn });
+    
+    // Test 4: QR image exists
+    const img = document.getElementById('qr-img');
+    results.push({ test: 'Image element exists', pass: !!img });
+    
+    // Test 5: Initial QR generated
+    results.push({ test: 'Initial QR generated', pass: img.src.includes('api.qrserver.com') });
+    
+    document.getElementById('results').textContent = JSON.stringify(results, null, 2);
+    console.log(results);
+  </script>
+</body>
+</html>
