@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UUID Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'SF Mono', Monaco, monospace; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #58a6ff; }
+    .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    button { background: #238636; color: #fff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+    button:hover { background: #2ea043; }
+    button.secondary { background: #21262d; border: 1px solid #30363d; }
+    button.secondary:hover { background: #30363d; }
+    input[type="number"] { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 12px; border-radius: 6px; width: 80px; }
+    label { display: flex; align-items: center; gap: 8px; }
+    .output { background: #161b22; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+    .uuid-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #30363d; }
+    .uuid-row:last-child { border-bottom: none; }
+    .uuid-row:hover { background: #21262d; }
+    .uuid { flex: 1; font-size: 14px; color: #58a6ff; }
+    .copy-btn { background: transparent; border: none; color: #8b949e; cursor: pointer; padding: 4px 8px; font-size: 12px; }
+    .copy-btn:hover { color: #c9d1d9; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #238636; color: white; padding: 10px 20px; border-radius: 6px; opacity: 0; transition: 0.3s; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔑 UUID Generator</h1>
+    <div class="controls">
+      <label>
+        <input type="number" id="count" value="5" min="1" max="100"> Count
+      </label>
+      <button onclick="generate()">Generate UUIDs</button>
+      <button class="secondary" onclick="copyAll()">Copy All</button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
+  <div class="toast" id="toast">Copied!</div>
+  <script>
+    function uuidv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+    function generate() {
+      const count = parseInt(document.getElementById('count').value) || 5;
+      const output = document.getElementById('output');
+      output.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const id = uuidv4();
+        const row = document.createElement('div');
+        row.className = 'uuid-row';
+        row.innerHTML = `<span class="uuid">${id}</span><button class="copy-btn" onclick="copy('${id}')">Copy</button>`;
+        output.appendChild(row);
+      }
+    }
+    function copy(text) {
+      navigator.clipboard.writeText(text);
+      showToast();
+    }
+    function copyAll() {
+      const uuids = [...document.querySelectorAll('.uuid')].map(el => el.textContent).join('\n');
+      navigator.clipboard.writeText(uuids);
+      showToast();
+    }
+    function showToast() {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1500);
+    }
+    generate();
+  </script>
+</body>
+</html>
