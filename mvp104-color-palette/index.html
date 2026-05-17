@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f23; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #ff6b9d; }
+    .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+    button { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px; transition: all 0.2s; }
+    button:hover { transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, #ff6b9d, #c44dff); color: white; }
+    .btn-secondary { background: #2a2a4a; color: #fff; }
+    .palette { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .color-card { border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .color-card:hover { transform: scale(1.05); }
+    .color-swatch { height: 120px; }
+    .color-info { padding: 12px; background: #1a1a2e; }
+    .color-hex { font-weight: bold; font-size: 14px; }
+    .color-rgb { font-size: 12px; color: #888; margin-top: 4px; }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #00ff88; color: #0f0f23; padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: transform 0.3s; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Color Palette Generator</h1>
+    
+    <div class="controls">
+      <button class="btn-primary" onclick="generatePalette()">Generate Palette</button>
+      <button class="btn-secondary" onclick="lockColors()">Lock/Unlock</button>
+    </div>
+    
+    <div class="palette" id="palette"></div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    let locked = [false, false, false, false, false];
+    const palette = document.getElementById('palette');
+    const toast = document.getElementById('toast');
+
+    function randomColor() {
+      return {
+        h: Math.floor(Math.random() * 360),
+        s: 50 + Math.floor(Math.random() * 50),
+        l: 30 + Math.floor(Math.random() * 40)
+      };
+    }
+
+    function hslToHex(h, s, l) {
+      l /= 100;
+      const a = s * Math.min(l, 1 - l) / 100;
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function hslToRgb(h, s, l) {
+      l /= 100;
+      const a = s * Math.min(l, 1 - l) / 100;
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color);
+      };
+      return `rgb(${f(0)}, ${f(8)}, ${f(4)})`;
+    }
+
+    function generatePalette() {
+      palette.innerHTML = '';
+      const colors = [];
+      
+      for (let i = 0; i < 5; i++) {
+        if (!locked[i]) {
+          colors.push(randomColor());
+        } else {
+          colors.push(locked[i]);
+        }
+      }
+      
+      colors.forEach((color, i) => {
+        if (color === true) continue; // skip locked
+        const hex = hslToHex(color.h, color.s, color.l);
+        const rgb = hslToRgb(color.h, color.s, color.l);
+        
+        // Adjust text color based on lightness
+        const textColor = color.l > 50 ? '#000' : '#fff';
+        
+        const card = document.createElement('div');
+        card.className = 'color-card';
+        card.innerHTML = `
+          <div class="color-swatch" style="background: ${hex};" onclick="copy('${hex}')"></div>
+          <div class="color-info" style="color: ${textColor}">
+            <div class="color-hex">${hex}</div>
+            <div class="color-rgb">${rgb}</div>
+          </div>
+        `;
+        palette.appendChild(card);
+      });
+    }
+
+    function lockColors() {
+      locked = locked.map(() => Math.random() > 0.5);
+      generatePalette();
+    }
+
+    function copy(text) {
+      navigator.clipboard.writeText(text);
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    generatePalette();
+  </script>
+</body>
+</html>
