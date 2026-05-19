@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #ffd93d; }
+    .input-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; }
+    textarea { width: 100%; padding: 1rem; border: 1px solid #333; border-radius: 8px; background: #16213e; color: #fff; font-size: 1rem; min-height: 150px; }
+    .cases { display: grid; gap: 1rem; }
+    .case-row { background: #16213e; padding: 1rem; border-radius: 8px; }
+    .case-label { color: #ffd93d; font-weight: bold; margin-bottom: 0.5rem; }
+    .case-value { font-family: monospace; word-break: break-all; background: #0f0f23; padding: 0.75rem; border-radius: 4px; min-height: 50px; }
+    .copy-btn { float: right; background: #ffd93d; color: #1a1a2e; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .copy-btn:hover { background: #ffc107; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Case Converter</h1>
+    <div class="input-group">
+      <label>Enter text:</label>
+      <textarea id="input" placeholder="Type or paste text here..."></textarea>
+    </div>
+    <div class="cases" id="cases"></div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const casesDiv = document.getElementById('cases');
+
+    const transformers = {
+      'lower': s => s.toLowerCase(),
+      'UPPER': s => s.toUpperCase(),
+      'Title Case': s => s.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase()),
+      'camelCase': s => s.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase()),
+      'CONSTANT_CASE': s => s.toUpperCase().replace(/[^a-zA-Z0-9]+/g, '_'),
+      'snake_case': s => s.toLowerCase().replace(/[^a-zA-Z0-9]+/g, '_'),
+      'kebab-case': s => s.toLowerCase().replace(/[^a-zA-Z0-9]+/g, '-'),
+      'Sentence case': s => s.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase()),
+      'dot.case': s => s.toLowerCase().replace(/[^a-zA-Z0-9]+/g, '.')
+    };
+
+    function render(result) {
+      casesDiv.innerHTML = Object.entries(transformers).map(([name, fn]) => `
+        <div class="case-row">
+          <div class="case-label">${name} <button class="copy-btn" onclick="copy('${name}')">Copy</button></div>
+          <div class="case-value" id="case-${name.replace(/\s/g, '-')}">${fn(result)}</div>
+        </div>
+      `).join('');
+    }
+
+    function copy(name) {
+      const id = 'case-' + name.replace(/\s/g, '-');
+      navigator.clipboard.writeText(document.getElementById(id).innerText);
+    }
+
+    input.addEventListener('input', () => {
+      const text = input.value;
+      if (!text) {
+        casesDiv.innerHTML = '';
+        return;
+      }
+      render(text);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorem Ipsum Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #ff6b6b; }
+    .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    label { color: #aaa; font-size: 0.875rem; }
+    input, select { padding: 0.75rem; border: 1px solid #333; border-radius: 8px; background: #16213e; color: #fff; }
+    button { padding: 0.75rem 1.5rem; background: #ff6b6b; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #ee5a5a; }
+    .output { background: #16213e; padding: 1.5rem; border-radius: 8px; line-height: 1.8; min-height: 200px; }
+    .copy-btn { float: right; background: #4ecdc4; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Lorem Ipsum Generator</h1>
+    <div class="controls">
+      <div class="control-group">
+        <label>Paragraphs</label>
+        <input type="number" id="paras" value="3" min="1" max="20">
+      </div>
+      <div class="control-group">
+        <label>Type</label>
+        <select id="type">
+          <option value="words">Words</option>
+          <option value="sentences">Sentences</option>
+          <option value="paragraphs" selected>Paragraphs</option>
+          <option value="bytes">Bytes</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Count</label>
+        <input type="number" id="count" value="3" min="1">
+      </div>
+      <button onclick="generate()">Generate</button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
+
+  <script>
+    const words = ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi', 'aliquip', 'ex', 'ea', 'commodo', 'consequat', 'duis', 'aute', 'irure', 'in', 'reprehenderit', 'voluptate', 'velit', 'esse', 'cillum', 'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat', 'cupidatat', 'non', 'proident', 'sunt', 'culpa', 'qui', 'officia', 'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum'];
+
+    const sentences = [
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.',
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
+      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.',
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.',
+      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.',
+      'Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt.',
+      'Ut labore et dolore magnam aliquam quaerat voluptatem.'
+    ];
+
+    function randomWord() { return words[Math.floor(Math.random() * words.length)]; }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function generate() {
+      const type = document.getElementById('type').value;
+      const count = parseInt(document.getElementById('count').value) || 3;
+      let output = '';
+
+      if (type === 'words') {
+        output = Array.from({ length: count }, () => randomWord()).join(' ');
+      } else if (type === 'sentences') {
+        output = Array.from({ length: count }, () => sentences[Math.floor(Math.random() * sentences.length)]).join(' ');
+      } else if (type === 'paragraphs') {
+        const paras = document.getElementById('paras').value;
+        output = Array.from({ length: parseInt(paras) || 3 }, () => {
+          const s = randomInt(4, 8);
+          return Array.from({ length: s }, () => sentences[Math.floor(Math.random() * sentences.length)]).join(' ');
+        }).join('\n\n');
+      } else if (type === 'bytes') {
+        const charCount = count;
+        output = Array.from({ length: charCount }, () => String.fromCharCode(randomInt(33, 126))).join('');
+      }
+
+      document.getElementById('output').innerHTML = output;
+    }
+
+    generate();
+  </script>
+</body>
+</html>

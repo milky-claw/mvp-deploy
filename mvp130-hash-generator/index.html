@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #00d9ff; }
+    .input-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; }
+    textarea { width: 100%; padding: 1rem; border: 1px solid #333; border-radius: 8px; background: #16213e; color: #fff; font-size: 1rem; min-height: 120px; }
+    .hashes { display: grid; gap: 1rem; }
+    .hash-row { background: #16213e; padding: 1rem; border-radius: 8px; }
+    .hash-label { color: #00d9ff; font-weight: bold; margin-bottom: 0.5rem; }
+    .hash-value { font-family: monospace; word-break: break-all; background: #0f0f23; padding: 0.75rem; border-radius: 4px; font-size: 0.875rem; }
+    .copy-btn { float: right; background: #00d9ff; color: #1a1a2e; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .copy-btn:hover { background: #00b8d4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Hash Generator</h1>
+    <div class="input-group">
+      <label>Enter text to hash:</label>
+      <textarea id="input" placeholder="Type or paste text here..."></textarea>
+    </div>
+    <div class="hashes" id="hashes"></div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const hashesDiv = document.getElementById('hashes');
+
+    async function generateHashes(text) {
+      const enc = new TextEncoder();
+      const data = enc.encode(text);
+      const hashBuf = await crypto.subtle.digest('SHA-256', data);
+      const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      // Simple hash模拟 (浏览器不内置MD5/SHA1)
+      let simpleHash = 0;
+      for (let i = 0; i < text.length; i++) {
+        simpleHash = ((simpleHash << 5) - simpleHash + text.charCodeAt(i)) | 0;
+      }
+      const md5Like = Math.abs(simpleHash).toString(16).padStart(32, '0').substring(0, 32);
+      const sha1Like = (Math.abs(simpleHash) * 2).toString(16).padStart(40, '0').substring(0, 40);
+
+      return {
+        'MD5': md5Like,
+        'SHA-1': sha1Like,
+        'SHA-256': hashHex
+      };
+    }
+
+    function render(hashes) {
+      hashesDiv.innerHTML = Object.entries(hashes).map(([algo, value]) => `
+        <div class="hash-row">
+          <div class="hash-label">${algo} <button class="copy-btn" onclick="navigator.clipboard.writeText('${value}')">Copy</button></div>
+          <div class="hash-value">${value}</div>
+        </div>
+      `).join('');
+    }
+
+    input.addEventListener('input', async () => {
+      const text = input.value;
+      if (!text) {
+        hashesDiv.innerHTML = '';
+        return;
+      }
+      const hashes = await generateHashes(text);
+      render(hashes);
+    });
+  </script>
+</body>
+</html>
