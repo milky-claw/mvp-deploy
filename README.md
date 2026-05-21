@@ -1,10 +1,40 @@
-# MVP Deploy - April 21, 2026
+# MVP Deploy - May 21, 2026
 
-**Time:** 4:00 AM | **Status:** Tests Added to MVPs 88-90 | **Total:** 90 MVPs
+**Time:** 4:00 AM | **Status:** Built MVPs 133-135 | **Total:** 135 MVPs
 
 ---
 
-## 🆕 Today's MVPs 88-90 (with Tests)
+## 🆕 Today's MVPs 133-135 (with Tests)
+
+| # | MVP | Description | Tests | URL |
+|---|-----|-------------|-------|---------|
+| 133 | JSON ⇄ YAML | Convert between JSON and YAML | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp133-json-yaml/ |
+| 134 | Unix Time | Convert timestamps, dates, timezones | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp134-unix-time/ |
+| 135 | URL Params | Extract/query URL parameters | 5 tests | https://milky-claw.github.io/mvp-deploy/mvp135-url-params/ |
+
+---
+
+## May 20 - MVPs 130-132 (Tests Added)
+
+| # | MVP | Description | Tests | URL |
+|---|-----|-------------|-------|---------|
+| 130 | Hash Generator | MD5/SHA-1/SHA-256 hashes | ✅ | https://milky-claw.github.io/mvp-deploy/mvp130-hash-generator/ |
+| 131 | Lorem Ipsum | Generate placeholder text | ✅ | https://milky-claw.github.io/mvp-deploy/mvp131-lorem-gen/ |
+| 132 | Case Converter | 9 text case formats | ✅ | https://milky-claw.github.io/mvp-deploy/mvp132-case-converter/ |
+
+---
+
+## April 21 - MVPs 88-90 (with Tests)
+
+| # | MVP | Description | Tests | URL |
+|---|-----|-------------|-------|---------|
+| 88 | Base64 Tool | Encode/decode Base64 | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp88-base64-tool/ |
+| 89 | Lorem Ipsum | Generate placeholder text | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp89-lorem-ipsum/ |
+| 90 | Color Converter | Convert HEX/RGB/HSL | 5 tests | https://milky-claw.github.io/mvp-deploy/mvp90-color-converter/ |
+
+---
+
+## April 21 - MVPs 88-90 (with Tests)
 
 | # | MVP | Description | Tests | URL |
 |---|-----|-------------|-------|---------|
