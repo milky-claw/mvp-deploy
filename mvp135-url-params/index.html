@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Parameter Extractor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a; 
+      color: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 { text-align: center; margin-bottom: 30px; color: #38bdf8; }
+    .container { max-width: 800px; margin: 0 auto; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #94a3b8; }
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: 'Monaco', 'Menlo', monospace;
+    }
+    textarea:focus, input:focus { outline: none; border-color: #38bdf8; }
+    textarea { min-height: 80px; resize: vertical; margin-bottom: 20px; }
+    .params-container { background: #1e293b; border-radius: 8px; overflow: hidden; }
+    .param-row { 
+      display: flex; 
+      border-bottom: 1px solid #334155; 
+    }
+    .param-row:last-child { border-bottom: none; }
+    .param-key, .param-value {
+      padding: 12px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .param-key { 
+      width: 40%; 
+      background: #0f172a; 
+      color: #f472b6; 
+      border-right: 1px solid #334155;
+    }
+    .param-value { 
+      width: 60%; 
+      color: #4ade80;
+      word-break: break-all;
+    }
+    .btn-row { display: flex; gap: 10px; margin: 20px 0; }
+    button {
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #0284c7; }
+    .actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .action-btn {
+      background: #475569;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .error { color: #f87171; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>URL Parameter Extractor</h1>
+  <div class="container">
+    <label>Enter URL with query parameters</label>
+    <textarea id="urlInput" placeholder="https://example.com/search?q=test&page=1&sort=date"></textarea>
+    
+    <div class="btn-row">
+      <button onclick="extractParams()">Extract Parameters</button>
+      <button onclick="sample()">Load Sample</button>
+    </div>
+
+    <label>Extracted Parameters</label>
+    <div class="params-container" id="paramsOutput">
+      <div class="param-row">
+        <div class="param-key">No parameters yet</div>
+        <div class="param-value">Enter a URL above</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action-btn" onclick="copyKeys()">Copy Keys</button>
+      <button class="action-btn" onclick="copyValues()">Copy Values</button>
+      <button class="action-btn" onclick="copyJSON()">Copy as JSON</button>
+      <button class="action-btn" onclick="buildUrl()">Build URL</button>
+    </div>
+  </div>
+
+  <script>
+    let paramsData = {};
+
+    function extractParams() {
+      const url = document.getElementById('urlInput').value.trim();
+      const output = document.getElementById('paramsOutput');
+      
+      if (!url) {
+        output.innerHTML = '<div class="param-row"><div class="param-key">-</div><div class="param-value">Enter a URL above</div></div>';
+        return;
+      }
+
+      try {
+        let urlObj;
+        // Handle URLs without protocol
+        if (!url.startsWith('http')) {
+          urlObj = new URL('https://' + url);
+        } else {
+          urlObj = new URL(url);
+        }
+        
+        paramsData = {};
+        urlObj.searchParams.forEach((value, key) => {
+          paramsData[key] = value;
+        });
+
+        if (Object.keys(paramsData).length === 0) {
+          output.innerHTML = '<div class="param-row"><div class="param-key">No parameters</div><div class="param-value">This URL has no query string</div></div>';
+          return;
+        }
+
+        output.innerHTML = Object.entries(paramsData).map(([key, value]) => `
+          <div class="param-row">
+            <div class="param-key">${escapeHtml(key)}</div>
+            <div class="param-value">${escapeHtml(value)}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        output.innerHTML = '<div class="param-row"><div class="param-key">Error</div><div class="param-value">Invalid URL: ' + e.message + '</div></div>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function sample() {
+      document.getElementById('urlInput').value = 'https://api.example.com/users?name=John&age=30&city=NYC&active=true&page=2';
+      extractParams();
+    }
+
+    function copyKeys() {
+      const keys = Object.keys(paramsData);
+      navigator.clipboard.writeText(keys.join('\n'));
+    }
+
+    function copyValues() {
+      const values = Object.values(paramsData);
+      navigator.clipboard.writeText(values.join('\n'));
+    }
+
+    function copyJSON() {
+      navigator.clipboard.writeText(JSON.stringify(paramsData, null, 2));
+    }
+
+    function buildUrl() {
+      const base = prompt('Enter base URL:', 'https://example.com');
+      if (!base) return;
+      
+      try {
+        const url = new URL(base);
+        Object.entries(paramsData).forEach(([k, v]) => {
+          url.searchParams.set(k, v);
+        });
+        navigator.clipboard.writeText(url.toString());
+      } catch (e) {
+        alert('Invalid URL: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

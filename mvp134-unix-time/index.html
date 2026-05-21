@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unix Time Converter</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a; 
+      color: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 { text-align: center; margin-bottom: 30px; color: #38bdf8; }
+    .converter { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; }
+    .field { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #94a3b8; }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 16px;
+    }
+    input:focus, select:focus { outline: none; border-color: #38bdf8; }
+    .result { 
+      background: #0f172a; 
+      padding: 16px; 
+      border-radius: 8px; 
+      margin-top: 20px;
+      font-family: monospace;
+    }
+    .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
+    .result-item:last-child { border-bottom: none; }
+    .result-label { color: #94a3b8; }
+    .result-value { color: #38bdf8; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    button {
+      flex: 1;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #0284c7; }
+    button.secondary { background: #475569; }
+    button.secondary:hover { background: #334155; }
+  </style>
+</head>
+<body>
+  <h1>Unix Time Converter</h1>
+  <div class="converter">
+    <div class="field">
+      <label>Unix Timestamp (seconds)</label>
+      <input type="number" id="timestamp" placeholder="1750483200">
+    </div>
+    <div class="field">
+      <label>Or Enter Date/Time</label>
+      <input type="datetime-local" id="datetime">
+    </div>
+    <div class="field">
+      <label>Timezone</label>
+      <select id="timezone">
+        <option value="UTC">UTC</option>
+        <option value="Europe/Riga">Europe/Riga (GMT+2)</option>
+        <option value="America/New_York">America/New_York (GMT-4)</option>
+        <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
+      </select>
+    </div>
+    <div class="result" id="result">
+      <div class="result-item"><span class="result-label">UTC:</span><span class="result-value" id="res-utc">-</span></div>
+      <div class="result-item"><span class="result-label">Local:</span><span class="result-value" id="res-local">-</span></div>
+      <div class="result-item"><span class="result-label">ISO:</span><span class="result-value" id="res-iso">-</span></div>
+      <div class="result-item"><span class="result-label">Relative:</span><span class="result-value" id="res-relative">-</span></div>
+    </div>
+    <div class="btn-row">
+      <button onclick="convertFromTimestamp()">Convert Timestamp</button>
+      <button class="secondary" onclick="convertFromDate()">Convert Date</button>
+      <button class="secondary" onclick="now()">Now</button>
+    </div>
+  </div>
+
+  <script>
+    const timestampInput = document.getElementById('timestamp');
+    const datetimeInput = document.getElementById('datetime');
+    const timezoneSelect = document.getElementById('timezone');
+
+    function convertFromTimestamp() {
+      const ts = parseInt(timestampInput.value);
+      if (isNaN(ts)) return;
+      
+      const date = new Date(ts * 1000);
+      displayResult(date);
+    }
+
+    function convertFromDate() {
+      const dt = datetimeInput.value;
+      if (!dt) return;
+      
+      const date = new Date(dt);
+      timestampInput.value = Math.floor(date.getTime() / 1000);
+      displayResult(date);
+    }
+
+    function displayResult(date) {
+      const tz = timezoneSelect.value;
+      document.getElementById('res-utc').textContent = date.toUTCString();
+      document.getElementById('res-iso').textContent = date.toISOString();
+      document.getElementById('res-relative').textContent = getRelativeTime(date);
+      
+      try {
+        const localStr = date.toLocaleString('en-US', { timeZone: tz });
+        document.getElementById('res-local').textContent = localStr + ` (${tz})`;
+      } catch {
+        document.getElementById('res-local').textContent = date.toLocaleString();
+      }
+    }
+
+    function getRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const absDiff = Math.abs(diff);
+      const seconds = Math.floor(absDiff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (diff > 0) {
+        if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+      } else {
+        if (days > 0) return `in ${days} day${days > 1 ? 's' : ''}`;
+        if (hours > 0) return `in ${hours} hour${hours > 1 ? 's' : ''}`;
+        if (minutes > 0) return `in ${minutes} minute${minutes > 1 ? 's' : ''}`;
+        return `in ${seconds} second${seconds !== 1 ? 's' : ''}`;
+      }
+    }
+
+    function now() {
+      const now = new Date();
+      timestampInput.value = Math.floor(now.getTime() / 1000);
+      datetimeInput.value = now.toISOString().slice(0, 16);
+      displayResult(now);
+    }
+
+    // Auto-convert on timestamp change
+    timestampInput.addEventListener('input', convertFromTimestamp);
+    datetimeInput.addEventListener('input', convertFromDate);
+    timezoneSelect.addEventListener('change', () => {
+      if (timestampInput.value) convertFromTimestamp();
+    });
+
+    // Init with current time
+    now();
+  </script>
+</body>
+</html>
