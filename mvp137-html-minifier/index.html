@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Minifier</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #f39c12; }
+    .card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+    textarea { width: 100%; height: 180px; padding: 12px; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; font-family: monospace; font-size: 13px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #f39c12; }
+    .btn-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-minify { background: #f39c12; color: #1a1a2e; }
+    .btn-minify:hover { background: #e67e22; }
+    .btn-clear { background: #0f3460; color: #f39c12; border: 2px solid #f39c12; }
+    .btn-clear:hover { background: #f39c12; color: #1a1a2e; }
+    .btn-copy { background: #0f3460; color: #00d4ff; border: 2px solid #00d4ff; }
+    .btn-copy:hover { background: #00d4ff; color: #1a1a2e; }
+    .stats { display: flex; gap: 20px; margin-top: 12px; padding: 12px; background: #0a0a1a; border-radius: 8px; font-size: 14px; }
+    .stat { color: #aaa; }
+    .stat strong { color: #f39c12; }
+    .result { margin-top: 16px; padding: 16px; background: #0a0a1a; border-radius: 8px; min-height: 60px; max-height: 300px; overflow: auto; }
+    .error { color: #e94560; }
+    .success { color: #00ff88; }
+    .options { display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap; }
+    .options label { font-weight: 400; color: #ccc; cursor: pointer; }
+    input[type="checkbox"] { margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 HTML Minifier</h1>
+    <div class="card">
+      <label>Input HTML</label>
+      <div class="options">
+        <label><input type="checkbox" id="opt-comments" checked> Remove comments</label>
+        <label><input type="checkbox" id="opt-whitespace" checked> Remove whitespace</label>
+        <label><input type="checkbox" id="opt-empty" checked> Remove empty attributes</label>
+      </div>
+      <textarea id="input" placeholder="Paste your HTML here..."></textarea>
+      <div class="btn-group">
+        <button class="btn-minify" onclick="minify()">Minify</button>
+        <button class="btn-clear" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+    <div class="card">
+      <label>Minified Output</label>
+      <div class="stats" id="stats" style="display:none">
+        <span class="stat">Original: <strong id="origSize">0</strong> bytes</span>
+        <span class="stat">Minified: <strong id="minSize">0</strong> bytes</span>
+        <span class="stat">Saved: <strong id="savedPct">0%</strong></span>
+      </div>
+      <div class="result" id="output"></div>
+      <div class="btn-group">
+        <button class="btn-copy" onclick="copyOutput()">Copy Result</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function minify() {
+      try {
+        const input = document.getElementById('input').value;
+        if (!input) return setError('Please enter HTML');
+        
+        let output = input;
+        const rmComments = document.getElementById('opt-comments').checked;
+        const rmWhitespace = document.getElementById('opt-whitespace').checked;
+        const rmEmpty = document.getElementById('opt-empty').checked;
+
+        if (rmComments) {
+          output = output.replace(/<!--[\s\S]*?-->/g, '');
+        }
+        
+        if (rmWhitespace) {
+          output = output.replace(/>\s+</g, '><');
+          output = output.replace(/\s+/g, ' ');
+        }
+        
+        if (rmEmpty) {
+          output = output.replace(/\s+=""/g, '');
+          output = output.replace(/>\s*<\/?html\s*>/g, '');
+        }
+
+        output = output.trim();
+        
+        const origSize = new Blob([input]).size;
+        const minSize = new Blob([output]).size;
+        const saved = origSize > 0 ? ((origSize - minSize) / origSize * 100).toFixed(1) : 0;
+        
+        document.getElementById('origSize').textContent = origSize;
+        document.getElementById('minSize').textContent = minSize;
+        document.getElementById('savedPct').textContent = saved + '%';
+        document.getElementById('stats').style.display = 'flex';
+        
+        setOutput(output);
+      } catch (e) {
+        setError(e.message);
+      }
+    }
+
+    function setOutput(text) {
+      const out = document.getElementById('output');
+      out.textContent = text;
+      out.className = 'result success';
+    }
+
+    function setError(msg) {
+      const out = document.getElementById('output');
+      out.textContent = msg;
+      out.className = 'result error';
+      document.getElementById('stats').style.display = 'none';
+    }
+
+    function clearAll() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').textContent = '';
+      document.getElementById('stats').style.display = 'none';
+    }
+
+    function copyOutput() {
+      const text = document.getElementById('output').textContent;
+      if (text) navigator.clipboard.writeText(text);
+    }
+  </script>
+</body>
+</html>

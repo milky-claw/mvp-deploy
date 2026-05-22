@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Vendor Prefixer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; color: #9b59b6; }
+    .card { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #aaa; }
+    textarea { width: 100%; height: 180px; padding: 12px; border: 2px solid #0f3460; border-radius: 8px; background: #0f3460; color: #fff; font-family: monospace; font-size: 13px; resize: vertical; }
+    textarea:focus { outline: none; border-color: #9b59b6; }
+    .btn-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-prefix { background: #9b59b6; color: #fff; }
+    .btn-prefix:hover { background: #8e44ad; }
+    .btn-clear { background: #0f3460; color: #9b59b6; border: 2px solid #9b59b6; }
+    .btn-clear:hover { background: #9b59b6; color: #fff; }
+    .btn-copy { background: #0f3460; color: #00d4ff; border: 2px solid #00d4ff; }
+    .btn-copy:hover { background: #00d4ff; color: #1a1a2e; }
+    .result { margin-top: 16px; padding: 16px; background: #0a0a1a; border-radius: 8px; min-height: 60px; max-height: 300px; overflow: auto; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+    .error { color: #e94560; }
+    .success { color: #00ff88; }
+    .info { padding: 12px; background: #0a0a1a; border-radius: 8px; font-size: 13px; color: #aaa; margin-bottom: 12px; }
+    .info code { background: #9b59b6; color: #fff; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 CSS Vendor Prefixer</h1>
+    <div class="card">
+      <label>Input CSS</label>
+      <div class="info">Enter CSS properties to add vendor prefixes. Supports: <code>transform</code>, <code>transition</code>, <code>animation</code>, <code>flex</code>, <code>box-shadow</code>, <code>border-radius</code>, <code>filter</code>, <code>calc</code>, <code>gradient</code></div>
+      <textarea id="input" placeholder="transform: scale(1.5);
+transition: all 0.3s ease;"></textarea>
+      <div class="btn-group">
+        <button class="btn-prefix" onclick="prefix()">Add Prefixes</button>
+        <button class="btn-clear" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+    <div class="card">
+      <label>Output CSS</label>
+      <div class="result" id="output"></div>
+      <div class="btn-group">
+        <button class="btn-copy" onclick="copyOutput()">Copy Result</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const prefixMap = {
+      'transform': ['-webkit-transform', '-moz-transform', '-ms-transform', '-o-transform'],
+      'transition': ['-webkit-transition', '-moz-transition', '-ms-transition', '-o-transition'],
+      'animation': ['-webkit-animation', '-moz-animation', '-ms-animation', '-o-animation'],
+      'flex': ['-webkit-flex', '-ms-flex'],
+      'flex-grow': ['-webkit-flex-grow'],
+      'flex-shrink': ['-webkit-flex-shrink'],
+      'flex-basis': ['-webkit-flex-basis'],
+      'justify-content': ['-webkit-justify-content', '-ms-justify-content'],
+      'align-items': ['-webkit-align-items', '-ms-align-items'],
+      'align-self': ['-webkit-align-self', '-ms-align-self'],
+      'order': ['-webkit-order', '-ms-order'],
+      'box-shadow': ['-webkit-box-shadow', '-moz-box-shadow'],
+      'border-radius': ['-webkit-border-radius', '-moz-border-radius'],
+      'filter': ['-webkit-filter', '-moz-filter'],
+      'calc': ['-webkit-calc', '-moz-calc'],
+      'linear-gradient': ['-webkit-linear-gradient', '-moz-linear-gradient'],
+      'radial-gradient': ['-webkit-radial-gradient', '-moz-radial-gradient'],
+      'appearance': ['-webkit-appearance', '-moz-appearance'],
+      'backface-visibility': ['-webkit-backface-visibility', '-moz-backface-visibility'],
+      'perspective': ['-webkit-perspective', '-moz-perspective'],
+      'user-select': ['-webkit-user-select', '-moz-user-select', '-ms-user-select'],
+      'touch-action': ['-webkit-touch-action', '-ms-touch-action'],
+      'mask': ['-webkit-mask', '-moz-mask'],
+      'clip-path': ['-webkit-clip-path', '-moz-clip-path'],
+      'transform-origin': ['-webkit-transform-origin', '-moz-transform-origin', '-ms-transform-origin'],
+      'transition-duration': ['-webkit-transition-duration', '-moz-transition-duration'],
+      'transition-timing-function': ['-webkit-transition-timing-function', '-moz-transition-timing-function'],
+      'animation-name': ['-webkit-animation-name'],
+      'animation-duration': ['-webkit-animation-duration'],
+      'animation-timing-function': ['-webkit-animation-timing-function'],
+      'animation-iteration-count': ['-webkit-animation-iteration-count'],
+    };
+
+    function prefix() {
+      const input = document.getElementById('input').value;
+      if (!input) return setError('Please enter CSS');
+      
+      let output = input;
+      
+      for (const [prop, prefixes] of Object.entries(prefixMap)) {
+        const regex = new RegExp(`(${prop}):\\s*([^;]+);`, 'gi');
+        output = output.replace(regex, (match, property, value) => {
+          let result = match + '\n';
+          for (const pref of prefixes) {
+            result += `${pref}:${value}; `;
+          }
+          return result;
+        });
+      }
+      
+      setOutput(output);
+    }
+
+    function setOutput(text) {
+      const out = document.getElementById('output');
+      out.textContent = text;
+      out.className = 'result success';
+    }
+
+    function setError(msg) {
+      const out = document.getElementById('output');
+      out.textContent = msg;
+      out.className = 'result error';
+    }
+
+    function clearAll() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').textContent = '';
+    }
+
+    function copyOutput() {
+      const text = document.getElementById('output').textContent;
+      if (text) navigator.clipboard.writeText(text);
+    }
+  </script>
+</body>
+</html>
