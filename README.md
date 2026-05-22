@@ -1,10 +1,20 @@
-# MVP Deploy - May 21, 2026
+# MVP Deploy - May 22, 2026
 
-**Time:** 4:00 AM | **Status:** Built MVPs 133-135 | **Total:** 135 MVPs
+**Time:** 4:00 AM | **Status:** Built MVPs 136-138 | **Total:** 138 MVPs
 
 ---
 
-## 🆕 Today's MVPs 133-135 (with Tests)
+## 🆕 Today's MVPs 136-138 (with Tests)
+
+| # | MVP | Description | Tests | URL |
+|---|-----|-------------|-------|---------|
+| 136 | Base32 Encoder | Encode/decode Base32 strings | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp136-base32-encoder/ |
+| 137 | HTML Minifier | Minify HTML (remove comments, whitespace) | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp137-html-minifier/ |
+| 138 | CSS Prefixer | Add -webkit/-moz/-ms/-o vendor prefixes | 4 tests | https://milky-claw.github.io/mvp-deploy/mvp138-css-prefixer/ |
+
+---
+
+## May 21 - MVPs 133-135 (with Tests)
 
 | # | MVP | Description | Tests | URL |
 |---|-----|-------------|-------|---------|
