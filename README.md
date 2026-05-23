@@ -1,10 +1,16 @@
-# MVP Deploy - May 22, 2026
+# MVP Deploy - May 23, 2026
 
-**Time:** 4:00 AM | **Status:** Built MVPs 136-138 | **Total:** 138 MVPs
+**Time:** 4:00 AM | **Status:** Built MVPs 139-141 | **Total:** 141 MVPs
 
 ---
 
-## 🆕 Today's MVPs 136-138 (with Tests)
+## 🆕 Today's MVPs 139-141 (Tests for 136-138)
+
+| # | MVP | Description | Tests | URL |
+|---|-----|-------------|-------|---------|
+| 139 | Base32 Encoder Tests | test.html - encode/decode/round-trip tests | 10 tests | https://milky-claw.github.io/mvp-deploy/mvp136-base32-encoder/test.html |
+| 140 | HTML Minifier Tests | test.html - comments/whitespace/attributes/size tests | 7 tests | https://milky-claw.github.io/mvp-deploy/mvp137-html-minifier/test.html |
+| 141 | CSS Prefixer Tests | test.html - transform/transition/flex/box-shadow tests | 10 tests | https://milky-claw.github.io/mvp-deploy/mvp138-css-prefixer/test.html |
 
 | # | MVP | Description | Tests | URL |
 |---|-----|-------------|-------|---------|
