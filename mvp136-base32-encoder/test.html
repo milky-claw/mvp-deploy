@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Runner - Base32 Encoder</title>
+</head>
+<body>
+  <h1>Base32 Encoder Tests</h1>
+  <pre id="output"></pre>
+  <script>
+    const base32Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    
+    // Testable functions (copied from index.html)
+    function encode(input) {
+      if (!input) return { error: 'Please enter text' };
+      
+      let bits = '';
+      for (let i = 0; i < input.length; i++) {
+        bits += input.charCodeAt(i).toString(2).padStart(8, '0');
+      }
+      
+      let result = '';
+      for (let i = 0; i + 5 <= bits.length; i += 5) {
+        result += base32Chars[parseInt(bits.substr(i, 5), 2)];
+      }
+      
+      const remaining = bits.length % 5;
+      if (remaining > 0) {
+        result += base32Chars[parseInt(bits.substr(bits.length - remaining) + '0'.repeat(5 - remaining), 2)];
+      }
+      
+      return { result };
+    }
+
+    function decode(input) {
+      if (!input) return { error: 'Please enter Base32 string' };
+      
+      const clean = input.toUpperCase().replace(/[^A-Z2-7]/g, '');
+      if (!clean) return { error: 'Please enter Base32 string' };
+      
+      let bits = '';
+      for (let i = 0; i < clean.length; i++) {
+        const val = base32Chars.indexOf(clean[i]);
+        if (val === -1) continue;
+        bits += val.toString(2).padStart(5, '0');
+      }
+      
+      let result = '';
+      for (let i = 0; i + 8 <= bits.length; i += 8) {
+        result += String.fromCharCode(parseInt(bits.substr(i, 8), 2));
+      }
+      
+      return { result };
+    }
+
+    // Tests
+    const tests = [
+      // Encode tests
+      { name: 'Encode: empty input', fn: () => encode(''), expect: { error: 'Please enter text' } },
+      { name: 'Encode: "A"', fn: () => encode('A'), expect: { result: 'IE======' } },
+      { name: 'Encode: "Hello"', fn: () => encode('Hello'), expect: { result: 'JBSWY3DP' } },
+      { name: 'Encode: "F"', fn: () => encode('F'), expect: { result: 'IY======' } },
+      { name: 'Encode: "Foo"', fn: () => encode('Foo'), expect: { result: 'MZXW6==='' } },
+      
+      // Decode tests
+      { name: 'Decode: empty input', fn: () => decode(''), expect: { error: 'Please enter Base32 string' } },
+      { name: 'Decode: "IE======"', fn: () => decode('IE======'), expect: { result: 'A' } },
+      { name: 'Decode: "JBSWY3DP"', fn: () => decode('JBSWY3DP'), expect: { result: 'Hello' } },
+      
+      // Round-trip tests
+      { name: 'Round-trip: "Test"', fn: () => { const e = encode('Test'); return decode(e.result); }, expect: { result: 'Test' } },
+      { name: 'Round-trip: "123"', fn: () => { const e = encode('123'); return decode(e.result); }, expect: { result: '123' } },
+    ];
+
+    let passed = 0, failed = 0;
+    const output = document.getElementById('output');
+    
+    tests.forEach(t => {
+      try {
+        const result = t.fn();
+        const pass = JSON.stringify(result) === JSON.stringify(t.expect);
+        if (pass) {
+          output.textContent += `✅ ${t.name}\n`;
+          passed++;
+        } else {
+          output.textContent += `❌ ${t.name}\n   Got: ${JSON.stringify(result)}\n   Expected: ${JSON.stringify(t.expect)}\n`;
+          failed++;
+        }
+      } catch(e) {
+        output.textContent += `❌ ${t.name} - Error: ${e.message}\n`;
+        failed++;
+      }
+    });
+    
+    output.textContent += `\n=== Results: ${passed} passed, ${failed} failed ===`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Runner - HTML Minifier</title>
+</head>
+<body>
+  <h1>HTML Minifier Tests</h1>
+  <pre id="output"></pre>
+  <script>
+    // Testable minify function
+    function minify(input, rmComments = true, rmWhitespace = true, rmEmpty = true) {
+      if (!input) return { error: 'Please enter HTML', output: '' };
+      
+      let output = input;
+
+      if (rmComments) {
+        output = output.replace(/<!--[\s\S]*?-->/g, '');
+      }
+      
+      if (rmWhitespace) {
+        output = output.replace(/>\s+</g, '><');
+        output = output.replace(/\s+/g, ' ');
+      }
+      
+      if (rmEmpty) {
+        output = output.replace(/\s+=""/g, '');
+      }
+
+      output = output.trim();
+      
+      const origSize = new Blob([input]).size;
+      const minSize = new Blob([output]).size;
+      const saved = origSize > 0 ? ((origSize - minSize) / origSize * 100).toFixed(1) : 0;
+      
+      return { output, origSize, minSize, saved: saved + '%' };
+    }
+
+    // Tests
+    const tests = [
+      // Empty input
+      { name: 'Empty input', fn: () => minify(''), expect: { error: 'Please enter HTML' } },
+      
+      // Comments removal
+      { name: 'Remove HTML comments', fn: () => minify('<div><!-- comment --></div>', true, false, false), expectContains: 'div></div>' },
+      { name: 'Keep when comments disabled', fn: () => minify('<div><!-- comment --></div>', false, false, false), expectContains: '<!-- comment -->' },
+      
+      // Whitespace removal
+      { name: 'Remove whitespace between tags', fn: () => minify('<div>  </div>', false, true, false), expectContains: '><' },
+      { name: 'Collapse multiple spaces', fn: () => minify('<div>hello   world</div>', false, true, false), expectContains: 'hello world' },
+      
+      // Empty attributes
+      { name: 'Remove empty attributes', fn: () => minify('<div class=""></div>', false, false, true), expectNotContains: 'class=""' },
+      { name: 'Keep non-empty attributes', fn: () => minify('<div class="foo"></div>', false, false, true), expectContains: 'class="foo"' },
+      
+      // Size calculation
+      { name: 'Size calculation works', fn: () => minify('<div>test</div>'), expectFunction: (r) => r.origSize > r.minSize },
+      
+      // Complex HTML
+      { name: 'Full minify complex HTML', fn: () => minify('<html>\n<head>\n  <!-- comment -->\n  <title>Test</title>\n</head>\n<body class="">\n  <div>Hello World</div>\n</body>\n</html>'), expectFunction: (r) => !r.error && r.output.length < 100 },
+    ];
+
+    let passed = 0, failed = 0;
+    const output = document.getElementById('output');
+    
+    tests.forEach(t => {
+      try {
+        const result = t.fn();
+        let pass = false;
+        
+        if (t.expect && JSON.stringify(result) === JSON.stringify(t.expect)) {
+          pass = true;
+        } else if (t.expectContains && result.output && result.output.includes(t.expectContains)) {
+          pass = true;
+        } else if (t.expectNotContains && result.output && !result.output.includes(t.expectNotContains)) {
+          pass = true;
+        } else if (t.expectFunction && t.expectFunction(result)) {
+          pass = true;
+        }
+        
+        if (pass) {
+          output.textContent += `✅ ${t.name}\n`;
+          passed++;
+        } else {
+          output.textContent += `❌ ${t.name}\n   Got: ${JSON.stringify(result).substring(0, 200)}\n`;
+          failed++;
+        }
+      } catch(e) {
+        output.textContent += `❌ ${t.name} - Error: ${e.message}\n`;
+        failed++;
+      }
+    });
+    
+    output.textContent += `\n=== Results: ${passed} passed, ${failed} failed ===`;
+  </script>
+</body>
+</html>

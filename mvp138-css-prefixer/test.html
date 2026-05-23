@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Runner - CSS Prefixer</title>
+</head>
+<body>
+  <h1>CSS Prefixer Tests</h1>
+  <pre id="output"></pre>
+  <script>
+    const prefixMap = {
+      'transform': ['-webkit-transform', '-moz-transform', '-ms-transform', '-o-transform'],
+      'transition': ['-webkit-transition', '-moz-transition', '-ms-transition', '-o-transition'],
+      'animation': ['-webkit-animation', '-moz-animation', '-ms-animation', '-o-animation'],
+      'flex': ['-webkit-flex', '-ms-flex'],
+      'flex-grow': ['-webkit-flex-grow'],
+      'box-shadow': ['-webkit-box-shadow', '-moz-box-shadow'],
+      'border-radius': ['-webkit-border-radius', '-moz-border-radius'],
+      'filter': ['-webkit-filter', '-moz-filter'],
+      'calc': ['-webkit-calc', '-moz-calc'],
+      'linear-gradient': ['-webkit-linear-gradient', '-moz-linear-gradient'],
+      'user-select': ['-webkit-user-select', '-moz-user-select', '-ms-user-select'],
+    };
+
+    function prefix(input) {
+      if (!input) return { error: 'Please enter CSS', output: '' };
+      
+      let output = input;
+      
+      for (const [prop, prefixes] of Object.entries(prefixMap)) {
+        const regex = new RegExp(`(${prop}):\\s*([^;]+);`, 'gi');
+        output = output.replace(regex, (match, property, value) => {
+          let result = match + '\n';
+          for (const pref of prefixes) {
+            result += `${pref}:${value}; `;
+          }
+          return result;
+        });
+      }
+      
+      return { output };
+    }
+
+    // Tests
+    const tests = [
+      // Empty input
+      { name: 'Empty input', fn: () => prefix(''), expect: { error: 'Please enter CSS' } },
+      
+      // Transform
+      { name: 'Add prefixes to transform', fn: () => prefix('transform: scale(1.5);'), expectContains: '-webkit-transform' },
+      { name: 'Transform has all prefixes', fn: () => prefix('transform: rotate(45deg);'), expectFunction: (r) => r.output.includes('-webkit-transform') && r.output.includes('-moz-transform') && r.output.includes('-ms-transform') },
+      
+      // Transition
+      { name: 'Add prefixes to transition', fn: () => prefix('transition: all 0.3s;'), expectContains: '-webkit-transition' },
+      
+      // Animation
+      { name: 'Add prefixes to animation', fn: () => prefix('animation: fadeIn 1s;'), expectContains: '-webkit-animation' },
+      
+      // Flex
+      { name: 'Add prefixes to flex', fn: () => prefix('flex: 1 1 auto;'), expectContains: '-webkit-flex' },
+      
+      // Box-shadow
+      { name: 'Add prefixes to box-shadow', fn: () => prefix('box-shadow: 0 0 5px red;'), expectContains: '-webkit-box-shadow' },
+      
+      // Border-radius
+      { name: 'Add prefixes to border-radius', fn: () => prefix('border-radius: 5px;'), expectContains: '-webkit-border-radius' },
+      
+      // Multiple properties
+      { name: 'Multiple properties', fn: () => prefix('transform: scale(1);\ntransition: all 0.3s;'), expectFunction: (r) => r.output.includes('-webkit-transform') && r.output.includes('-webkit-transition') },
+      
+      // Unknown properties stay unchanged
+      { name: 'Unknown property unchanged', fn: () => prefix('color: red;'), expectContains: 'color: red;' },
+      
+      // Case insensitive
+      { name: 'Case insensitive TRANSFORM', fn: () => prefix('TRANSFORM: scale(1);'), expectContains: '-webkit-transform' },
+    ];
+
+    let passed = 0, failed = 0;
+    const output = document.getElementById('output');
+    
+    tests.forEach(t => {
+      try {
+        const result = t.fn();
+        let pass = false;
+        
+        if (t.expect && JSON.stringify(result) === JSON.stringify(t.expect)) {
+          pass = true;
+        } else if (t.expectContains && result.output && result.output.includes(t.expectContains)) {
+          pass = true;
+        } else if (t.expectFunction && t.expectFunction(result)) {
+          pass = true;
+        }
+        
+        if (pass) {
+          output.textContent += `✅ ${t.name}\n`;
+          passed++;
+        } else {
+          output.textContent += `❌ ${t.name}\n   Got: ${result.output ? result.output.substring(0, 150) : result.error}\n`;
+          failed++;
+        }
+      } catch(e) {
+        output.textContent += `❌ ${t.name} - Error: ${e.message}\n`;
+        failed++;
+      }
+    });
+    
+    output.textContent += `\n=== Results: ${passed} passed, ${failed} failed ===`;
+  </script>
+</body>
+</html>
