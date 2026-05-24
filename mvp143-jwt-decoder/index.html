@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Decoder</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #ff6b6b; }
+    .card { background: #16213e; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    textarea { width: 100%; height: 80px; padding: 12px; background: #0f3460; border: 1px solid #533483; color: #fff; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    textarea:focus { outline: none; border-color: #ff6b6b; }
+    .output { background: #0f3460; padding: 15px; border-radius: 4px; margin-top: 15px; }
+    .output h3 { margin: 0 0 10px 0; color: #ff6b6b; font-size: 14px; }
+    .output pre { margin: 0; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
+    .error { color: #ff6b6b; }
+    .valid { color: #51cf66; }
+  </style>
+</head>
+<body>
+  <h1>🔐 JWT Decoder</h1>
+  
+  <div class="card">
+    <label>Paste JWT token</label>
+    <textarea id="jwt" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" oninput="decode()"></textarea>
+  </div>
+
+  <div class="output" id="header">
+    <h3>HEADER</h3>
+    <pre id="headerOut"></pre>
+  </div>
+
+  <div class="output" id="payload">
+    <h3>PAYLOAD</h3>
+    <pre id="payloadOut"></pre>
+  </div>
+
+  <div class="output">
+    <h3>VERIFY SIGNATURE</h3>
+    <pre id="signatureOut">Enter a token to decode</pre>
+  </div>
+
+  <script>
+    function decode() {
+      const token = document.getElementById('jwt').value.trim();
+      if (!token) {
+        document.getElementById('headerOut').textContent = '';
+        document.getElementById('payloadOut').textContent = '';
+        document.getElementById('signatureOut').textContent = 'Enter a token to decode';
+        return;
+      }
+
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid JWT format');
+        }
+
+        // Decode header
+        const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+        document.getElementById('headerOut').textContent = JSON.stringify(header, null, 2);
+
+        // Decode payload
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        document.getElementById('payloadOut').textContent = JSON.stringify(payload, null, 2);
+
+        // Signature note
+        document.getElementById('signatureOut').textContent = parts[2] + '\n\n⚠️ Signature verification requires the secret key (not included)';
+        document.getElementById('signatureOut').className = '';
+      } catch (e) {
+        document.getElementById('headerOut').textContent = '';
+        document.getElementById('payloadOut').textContent = '';
+        document.getElementById('signatureOut').textContent = 'Error: ' + e.message;
+        document.getElementById('signatureOut').className = 'error';
+      }
+    }
+  </script>
+</body>
+</html>

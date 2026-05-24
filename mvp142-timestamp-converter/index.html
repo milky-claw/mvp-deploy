@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timestamp Converter</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d9ff; }
+    .card { background: #16213e; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    input, textarea { width: 100%; padding: 12px; background: #0f3460; border: 1px solid #533483; color: #fff; border-radius: 4px; font-family: monospace; }
+    input:focus, textarea:focus { outline: none; border-color: #00d9ff; }
+    button { background: #00d9ff; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+    button:hover { background: #00a8cc; }
+    .result { background: #0f3460; padding: 15px; border-radius: 4px; margin-top: 15px; word-break: break-all; }
+    .result-label { color: #00d9ff; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>⏱️ Timestamp Converter</h1>
+  
+  <div class="card">
+    <label>Unix Timestamp (seconds or milliseconds)</label>
+    <input type="text" id="timestamp" placeholder="1750158800 or 1750158800000" oninput="convertFromTs()">
+  </div>
+  
+  <div class="card">
+    <label>ISO Date String</label>
+    <input type="text" id="iso" placeholder="2026-05-24T04:00:00.000Z" oninput="convertFromIso()">
+  </div>
+  
+  <div class="card">
+    <label>Human Readable</label>
+    <input type="text" id="human" placeholder="Sun May 24 2026 04:00:00 GMT+2" oninput="convertFromHuman()">
+  </div>
+
+  <button onclick="now()">Now</button>
+  <button onclick="clearAll()">Clear</button>
+
+  <script>
+    function convertFromTs() {
+      const val = document.getElementById('timestamp').value.trim();
+      if (!val) return;
+      let ts = parseInt(val);
+      if (ts < 10000000000) ts *= 1000; // seconds to ms
+      const d = new Date(ts);
+      document.getElementById('iso').value = d.toISOString();
+      document.getElementById('human').value = d.toString();
+    }
+
+    function convertFromIso() {
+      const val = document.getElementById('iso').value.trim();
+      if (!val) return;
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return;
+      document.getElementById('timestamp').value = d.getTime();
+      document.getElementById('human').value = d.toString();
+    }
+
+    function convertFromHuman() {
+      const val = document.getElementById('human').value.trim();
+      if (!val) return;
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return;
+      document.getElementById('timestamp').value = d.getTime();
+      document.getElementById('iso').value = d.toISOString();
+    }
+
+    function now() {
+      const now = Date.now();
+      document.getElementById('timestamp').value = now;
+      const d = new Date(now);
+      document.getElementById('iso').value = d.toISOString();
+      document.getElementById('human').value = d.toString();
+    }
+
+    function clearAll() {
+      document.getElementById('timestamp').value = '';
+      document.getElementById('iso').value = '';
+      document.getElementById('human').value = '';
+    }
+  </script>
+</body>
+</html>

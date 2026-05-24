@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Contrast Checker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #fcc419; }
+    .preview { padding: 30px; border-radius: 8px; text-align: center; font-size: 24px; margin-bottom: 20px; border: 2px solid #333; }
+    .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .card { background: #16213e; padding: 15px; border-radius: 8px; }
+    label { display: block; margin-bottom: 8px; color: #aaa; }
+    input[type="text"] { width: 100%; padding: 10px; background: #0f3460; border: 1px solid #533483; color: #fff; border-radius: 4px; }
+    input[type="color"] { width: 100%; height: 40px; cursor: pointer; }
+    .results { background: #16213e; padding: 20px; border-radius: 8px; }
+    .ratio { font-size: 48px; font-weight: bold; color: #51cf66; }
+    .ratio.fail { color: #ff6b6b; }
+    .labels { display: flex; justify-content: space-between; margin-top: 10px; }
+    .label { padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+    .aaa { background: #51cf66; color: #000; }
+    .aa { background: #94d82d; color: #000; }
+    .fail { background: #ff6b6b; color: #fff; }
+    .sample { margin-top: 20px; padding: 15px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🎨 Color Contrast Checker</h1>
+  
+  <div class="inputs">
+    <div class="card">
+      <label>Background</label>
+      <input type="color" id="bg" value="#ffffff" oninput="update()">
+      <input type="text" id="bgText" value="#ffffff" oninput="syncFromText('bg')" style="margin-top:8px">
+    </div>
+    <div class="card">
+      <label>Foreground</label>
+      <input type="color" id="fg" value="#000000" oninput="update()">
+      <input type="text" id="fgText" value="#000000" oninput="syncFromText('fg')" style="margin-top:8px">
+    </div>
+  </div>
+
+  <div class="preview" id="preview">Sample Text</div>
+
+  <div class="results">
+    <div>Contrast Ratio</div>
+    <div class="ratio" id="ratio">21.00</div>
+    <div class="labels">
+      <span class="label aaa" id="aaa">AAA ✓</span>
+      <span class="label aa" id="aa">AA ✓</span>
+      <span class="label fail" id="fail" style="display:none">Fail</span>
+    </div>
+  </div>
+
+  <div class="sample" id="samplePreview">
+    <small>Small text sample</small>
+  </div>
+
+  <script>
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function luminance(r, g, b) {
+      const a = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function contrast(rgb1, rgb2) {
+      const l1 = luminance(rgb1.r, rgb1.g, rgb1.b);
+      const l2 = luminance(rgb2.r, rgb2.g, rgb2.b);
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    }
+
+    function update() {
+      const bg = document.getElementById('bg').value;
+      const fg = document.getElementById('fg').value;
+      document.getElementById('bgText').value = bg;
+      document.getElementById('fgText').value = fg;
+
+      const preview = document.getElementById('preview');
+      preview.style.backgroundColor = bg;
+      preview.style.color = fg;
+
+      const rgb1 = hexToRgb(bg);
+      const rgb2 = hexToRgb(fg);
+      const ratio = contrast(rgb1, rgb2);
+      
+      const ratioEl = document.getElementById('ratio');
+      ratioEl.textContent = ratio.toFixed(2);
+      
+      const aaa = document.getElementById('aaa');
+      const aa = document.getElementById('aa');
+      const fail = document.getElementById('fail');
+
+      if (ratio >= 7) {
+        aaa.style.display = 'block';
+        aa.style.display = 'block';
+        fail.style.display = 'none';
+        ratioEl.className = 'ratio';
+      } else if (ratio >= 4.5) {
+        aaa.style.display = 'none';
+        aa.style.display = 'block';
+        fail.style.display = 'none';
+        ratioEl.className = 'ratio';
+      } else if (ratio >= 3) {
+        aaa.style.display = 'none';
+        aa.style.display = 'block';
+        aa.textContent = 'AA Large ✓';
+        fail.style.display = 'none';
+        ratioEl.className = 'ratio';
+      } else {
+        aaa.style.display = 'none';
+        aa.style.display = 'none';
+        fail.style.display = 'block';
+        ratioEl.className = 'ratio fail';
+      }
+
+      const sample = document.getElementById('samplePreview');
+      sample.style.backgroundColor = bg;
+      sample.style.color = fg;
+    }
+
+    function syncFromText(id) {
+      const text = document.getElementById(id + 'Text').value;
+      if (/^#[0-9a-f]{6}$/i.test(text)) {
+        document.getElementById(id).value = text;
+        update();
+      }
+    }
+
+    update();
+  </script>
+</body>
+</html>
