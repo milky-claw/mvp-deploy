@@ -1,10 +1,20 @@
-# MVP Deploy - May 24, 2026
+# MVP Deploy - May 25, 2026
 
-**Time:** 4:00 AM | **Status:** Built MVPs 142-144 | **Total:** 144 MVPs
+**Time:** 4:00 AM | **Status:** Built MVPs 145-147 (Tests for 142-144) | **Total:** 147 MVPs
 
 ---
 
-## 🆕 Today's MVPs 142-144
+## 🆕 Today's MVPs 145-147 (Tests)
+
+| # | MVP | Tests | Description | URL |
+|---|-----|-------|-------------|---------|
+| 145 | Timestamp Converter Tests | 10 tests | Empty/seconds/ms/ISO/human/invalid/now/clear/year2000/year2030 | https://milky-claw.github.io/mvp-deploy/mvp142-timestamp-converter/test.html |
+| 146 | JWT Decoder Tests | 10 tests | Valid header/payload/invalid format/whitespace/iat/signature | https://milky-claw.github.io/mvp-deploy/mvp143-jwt-decoder/test.html |
+| 147 | Color Contrast Tests | 10 tests | 21:1/AAA/AA Large/fail/hex parsing/wcag thresholds | https://milky-claw.github.io/mvp-deploy/mvp144-color-contrast/test.html |
+
+---
+
+## May 24 - MVPs 142-144
 
 | # | MVP | Description | URL |
 |---|-----|-------------|---------|
