@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JWT Decoder Tests</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #ff6b6b; }
+    .test { padding: 10px; margin: 5px 0; border-radius: 4px; }
+    .pass { background: #166534; color: #86efac; }
+    .fail { background: #991b1b; color: #fca5a5; }
+    .run { background: #1e40af; color: #93c5fd; padding: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🔐 JWT Decoder Tests</h1>
+  <div class="run" onclick="runTests()">▶ Run Tests</div>
+  <div id="results"></div>
+
+  <script src="index.html" hidden></script>
+  <script>
+    const results = [];
+    
+    function test(name, fn) {
+      try {
+        fn();
+        results.push({ name, pass: true });
+      } catch (e) {
+        results.push({ name, pass: false, error: e.message });
+      }
+    }
+    
+    function assertEq(actual, expected, msg = '') {
+      if (actual !== expected) {
+        throw new Error(`${msg || 'Assertion failed'}: expected ${expected}, got ${actual}`);
+      }
+    }
+    
+    function assertContains(actual, substr, msg = '') {
+      if (!actual.includes(substr)) {
+        throw new Error(`${msg || 'Assertion failed'}: expected "${actual}" to contain "${substr}"`);
+      }
+    }
+    
+    function runTests() {
+      results.length = 0;
+      
+      const sampleJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+      
+      // Test 1: Valid JWT decodes header
+      test('Valid JWT decodes header alg', () => {
+        document.getElementById('jwt').value = sampleJWT;
+        decode();
+        const header = document.getElementById('headerOut').textContent;
+        assertContains(header, 'HS256');
+      });
+      
+      // Test 2: Valid JWT decodes payload
+      test('Valid JWT decodes payload sub', () => {
+        const payload = document.getElementById('payloadOut').textContent;
+        assertContains(payload, '1234567890');
+      });
+      
+      // Test 3: Valid JWT decodes name
+      test('Valid JWT decodes payload name', () => {
+        const payload = document.getElementById('payloadOut').textContent;
+        assertContains(payload, 'John Doe');
+      });
+      
+      // Test 4: Empty input clears outputs
+      test('Empty input clears all outputs', () => {
+        document.getElementById('jwt').value = '';
+        decode();
+        assertEq(document.getElementById('headerOut').textContent, '');
+        assertEq(document.getElementById('payloadOut').textContent, '');
+      });
+      
+      // Test 5: Invalid JWT format
+      test('Invalid format (2 parts) shows error', () => {
+        document.getElementById('jwt').value = 'part1.part2';
+        decode();
+        assertContains(document.getElementById('signatureOut').textContent, 'Error');
+      });
+      
+      // Test 6: Invalid base64 in header
+      test('Invalid base64 shows error', () => {
+        document.getElementById('jwt').value = '!!!.eyJzZWNvbmQiOiJ0ZXN0In0.signature';
+        decode();
+        assertContains(document.getElementById('signatureOut').textContent, 'Error');
+      });
+      
+      // Test 7: Minimal valid JWT
+      test('Minimal JWT decodes', () => {
+        document.getElementById('jwt').value = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.signature';
+        decode();
+        const header = document.getElementById('headerOut').textContent;
+        const payload = document.getElementById('payloadOut').textContent;
+        if (!header || !payload) throw new Error('Empty decode');
+      });
+      
+      // Test 8: JWT with iat claim
+      test('JWT with iat timestamp', () => {
+        document.getElementById('jwt').value = sampleJWT;
+        decode();
+        const payload = document.getElementById('payloadOut').textContent;
+        assertContains(payload, '1516239022');
+      });
+      
+      // Test 9: Signature part preserved
+      test('Signature part is preserved', () => {
+        document.getElementById('jwt').value = sampleJWT;
+        decode();
+        const sig = document.getElementById('signatureOut').textContent;
+        if (!sig.includes('SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')) {
+          throw new Error('Signature not preserved');
+        }
+      });
+      
+      // Test 10: Whitespace handling
+      test('JWT with surrounding whitespace', () => {
+        document.getElementById('jwt').value = '  ' + sampleJWT + '  ';
+        decode();
+        const header = document.getElementById('headerOut').textContent;
+        if (!header) throw new Error('Should decode with whitespace');
+      });
+      
+      displayResults();
+    }
+    
+    function displayResults() {
+      const out = document.getElementById('results');
+      out.innerHTML = results.map(r => 
+        `<div class="test ${r.pass ? 'pass' : 'fail'}">${r.pass ? '✓' : '✗'} ${r.name}${r.error ? ': ' + r.error : ''}</div>`
+      ).join('');
+    }
+  </script>
+</body>
+</html>

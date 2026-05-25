@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Color Contrast Checker Tests</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #fcc419; }
+    .test { padding: 10px; margin: 5px 0; border-radius: 4px; }
+    .pass { background: #166534; color: #86efac; }
+    .fail { background: #991b1b; color: #fca5a5; }
+    .run { background: #1e40af; color: #93c5fd; padding: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🎨 Color Contrast Checker Tests</h1>
+  <div class="run" onclick="runTests()">▶ Run Tests</div>
+  <div id="results"></div>
+
+  <script src="index.html" hidden></script>
+  <script>
+    const results = [];
+    
+    function test(name, fn) {
+      try {
+        fn();
+        results.push({ name, pass: true });
+      } catch (e) {
+        results.push({ name, pass: false, error: e.message });
+      }
+    }
+    
+    function assertEq(actual, expected, msg = '') {
+      if (Math.abs(actual - expected) > 0.1) {
+        throw new Error(`${msg || 'Assertion failed'}: expected ${expected}, got ${actual}`);
+      }
+    }
+    
+    function runTests() {
+      results.length = 0;
+      
+      // Test 1: Black on white = 21:1
+      test('Black on white = 21:1 ratio', () => {
+        document.getElementById('bg').value = '#ffffff';
+        document.getElementById('fg').value = '#000000';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        assertEq(ratio, 21);
+      });
+      
+      // Test 2: White on black = 21:1
+      test('White on black = 21:1 ratio', () => {
+        document.getElementById('bg').value = '#000000';
+        document.getElementById('fg').value = '#ffffff';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        assertEq(ratio, 21);
+      });
+      
+      // Test 3: Same color = 1:1
+      test('Same colors = 1:1 ratio', () => {
+        document.getElementById('bg').value = '#ffffff';
+        document.getElementById('fg').value = '#ffffff';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        assertEq(ratio, 1);
+      });
+      
+      // Test 4: Passes AAA (>=7)
+      test('AAA green (#00ff00) on white', () => {
+        document.getElementById('bg').value = '#ffffff';
+        document.getElementById('fg').value = '#00ff00';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        if (ratio < 7) throw new Error('Should pass AAA');
+      });
+      
+      // Test 5: AA Large only (>=3, <4.5)
+      test('AA Large (dark blue on white)', () => {
+        document.getElementById('bg').value = '#ffffff';
+        document.getElementById('fg').value = '#000080';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        if (ratio < 3 || ratio >= 4.5) throw new Error('Should be AA Large only');
+      });
+      
+      // Test 6: Fail (<3)
+      test('Fail (light gray on white)', () => {
+        document.getElementById('bg').value = '#ffffff';
+        document.getElementById('fg').value = '#cccccc';
+        update();
+        const ratio = parseFloat(document.getElementById('ratio').textContent);
+        if (ratio >= 3) throw new Error('Should fail');
+      });
+      
+      // Test 7: hexToRgb function
+      test('hexToRgb parses #ff0000', () => {
+        const rgb = hexToRgb('#ff0000');
+        if (rgb.r !== 255 || rgb.g !== 0 || rgb.b !== 0) {
+          throw new Error('Red channel wrong');
+        }
+      });
+      
+      // Test 8: hexToRgb with short hex
+      test('hexToRgb parses #f00', () => {
+        const rgb = hexToRgb('#f00');
+        if (rgb.r !== 255 || rgb.g !== 0 || rgb.b !== 0) {
+          throw new Error('Red channel wrong');
+        }
+      });
+      
+      // Test 9: hexToRgb null for invalid
+      test('hexToRgb returns null for invalid', () => {
+        const rgb = hexToRgb('not-a-color');
+        if (rgb !== null) throw new Error('Should be null');
+      });
+      
+      // Test 10: Text sync works
+      test('syncFromText updates color picker', () => {
+        document.getElementById('fgText').value = '#ff0000';
+        syncFromText('fg');
+        if (document.getElementById('fg').value !== '#ff0000') {
+          throw new Error('Color picker not updated');
+        }
+      });
+      
+      displayResults();
+    }
+    
+    function displayResults() {
+      const out = document.getElementById('results');
+      out.innerHTML = results.map(r => 
+        `<div class="test ${r.pass ? 'pass' : 'fail'}">${r.pass ? '✓' : '✗'} ${r.name}${r.error ? ': ' + r.error : ''}</div>`
+      ).join('');
+    }
+  </script>
+</body>
+</html>

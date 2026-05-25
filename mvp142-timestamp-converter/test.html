@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Timestamp Converter Tests</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #00d9ff; }
+    .test { padding: 10px; margin: 5px 0; border-radius: 4px; }
+    .pass { background: #166534; color: #86efac; }
+    .fail { background: #991b1b; color: #fca5a5; }
+    .run { background: #1e40af; color: #93c5fd; padding: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>⏱️ Timestamp Converter Tests</h1>
+  <div class="run" onclick="runTests()">▶ Run Tests</div>
+  <div id="results"></div>
+
+  <script src="index.html" hidden></script>
+  <script>
+    const results = [];
+    
+    function test(name, fn) {
+      try {
+        fn();
+        results.push({ name, pass: true });
+      } catch (e) {
+        results.push({ name, pass: false, error: e.message });
+      }
+    }
+    
+    function assertEq(actual, expected, msg = '') {
+      if (actual !== expected) {
+        throw new Error(`${msg || 'Assertion failed'}: expected ${expected}, got ${actual}`);
+      }
+    }
+    
+    function runTests() {
+      results.length = 0;
+      
+      // Test 1: Empty input
+      test('Empty timestamp input returns', () => {
+        document.getElementById('timestamp').value = '';
+        convertFromTs();
+        assertEq(document.getElementById('iso').value, '');
+      });
+      
+      // Test 2: Unix seconds conversion
+      test('Unix seconds (1750158800) converts to ISO', () => {
+        document.getElementById('timestamp').value = '1750158800';
+        convertFromTs();
+        const iso = document.getElementById('iso').value;
+        if (!iso.includes('2026-05-24')) throw new Error('Wrong date');
+      });
+      
+      // Test 3: Unix milliseconds conversion
+      test('Unix milliseconds converts to ISO', () => {
+        document.getElementById('timestamp').value = '1750158800000';
+        convertFromTs();
+        const iso = document.getElementById('iso').value;
+        if (!iso.includes('2026-05-24')) throw new Error('Wrong date');
+      });
+      
+      // Test 4: ISO to timestamp
+      test('ISO string to timestamp', () => {
+        document.getElementById('iso').value = '2026-05-24T04:00:00.000Z';
+        convertFromIso();
+        const ts = document.getElementById('timestamp').value;
+        assertEq(ts, '1750154400000');
+      });
+      
+      // Test 5: Human to timestamp
+      test('Human readable to timestamp', () => {
+        document.getElementById('human').value = 'Sun May 24 2026 04:00:00 GMT+0000';
+        convertFromHuman();
+        const ts = document.getElementById('timestamp').value;
+        assertEq(ts, '1750154400000');
+      });
+      
+      // Test 6: Invalid input
+      test('Invalid timestamp gracefully handles', () => {
+        document.getElementById('timestamp').value = 'not-a-number';
+        convertFromTs();
+        // Should not throw, should just not update
+      });
+      
+      // Test 7: now() function
+      test('now() fills all fields', () => {
+        now();
+        const ts = document.getElementById('timestamp').value;
+        const iso = document.getElementById('iso').value;
+        const human = document.getElementById('human').value;
+        if (!ts || !iso || !human) throw new Error('Empty field');
+      });
+      
+      // Test 8: clearAll() function
+      test('clearAll() clears all fields', () => {
+        clearAll();
+        assertEq(document.getElementById('timestamp').value, '');
+        assertEq(document.getElementById('iso').value, '');
+        assertEq(document.getElementById('human').value, '');
+      });
+      
+      // Test 9: Year 2000 timestamp
+      test('Year 2000 timestamp converts', () => {
+        document.getElementById('timestamp').value = '946684800';
+        convertFromTs();
+        if (!document.getElementById('iso').value.includes('2000')) throw new Error('Wrong year');
+      });
+      
+      // Test 10: Future timestamp
+      test('Year 2030 timestamp converts', () => {
+        document.getElementById('timestamp').value = '1893456000';
+        convertFromTs();
+        if (!document.getElementById('iso').value.includes('2030')) throw new Error('Wrong year');
+      });
+      
+      displayResults();
+    }
+    
+    function displayResults() {
+      const out = document.getElementById('results');
+      out.innerHTML = results.map(r => 
+        `<div class="test ${r.pass ? 'pass' : 'fail'}">${r.pass ? '✓' : '✗'} ${r.name}${r.error ? ': ' + r.error : ''}</div>`
+      ).join('');
+    }
+  </script>
+</body>
+</html>
