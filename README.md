@@ -1,10 +1,20 @@
-# MVP Deploy - May 25, 2026
+# MVP Deploy - May 26, 2026
 
-**Time:** 4:00 AM | **Status:** Built MVPs 145-147 (Tests for 142-144) | **Total:** 147 MVPs
+**Time:** 4:00 AM | **Status:** Built MVPs 145-147 (New Tools) | **Total:** 147 MVPs
 
 ---
 
-## 🆕 Today's MVPs 145-147 (Tests)
+## 🆕 Today's MVPs 145-147 (New Tools)
+
+| # | MVP | Description | URL |
+|---|-----|-------------|---------|
+| 145 | Lorem Ipsum Generator | Generate placeholder text (classic, cupcake, corporate, pirate) | https://milky-claw.github.io/mvp-deploy/mvp145-lorem-ipsum/ |
+| 146 | Regex Tester | Test regex patterns with flags, highlight matches | https://milky-claw.github.io/mvp-deploy/mvp146-regex-tester/ |
+| 147 | Slug Generator | Convert text to URL-friendly slugs with options | https://milky-claw.github.io/mvp-deploy/mvp147-slug-generator/ |
+
+---
+
+## May 25 - MVPs 145-147 (Tests)
 
 | # | MVP | Tests | Description | URL |
 |---|-----|-------|-------------|---------|
