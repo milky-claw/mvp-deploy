@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regex Tester</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 20px; }
+    .row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .col { flex: 1; min-width: 300px; }
+    label { display: block; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 5px; }
+    input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; font-family: monospace; }
+    textarea { height: 150px; resize: vertical; }
+    .flags { display: flex; gap: 10px; margin-bottom: 15px; }
+    .flag-label { display: flex; align-items: center; gap: 5px; font-size: 14px; }
+    button { padding: 12px 24px; background: #4a90d9; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #357abd; }
+    .results { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
+    .match { background: #d4edda; padding: 2px 6px; border-radius: 3px; }
+    .no-match { color: #dc3545; }
+    .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; }
+    .match-list { margin-top: 15px; }
+    .match-item { padding: 8px; border-bottom: 1px solid #eee; }
+    .match-item:last-child { border-bottom: none; }
+    .group { color: #6f42c1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Regex Tester</h1>
+    <div class="row">
+      <div class="col">
+        <label>Regular Expression</label>
+        <input type="text" id="regex" placeholder="e.g., \d+|[a-z]+">
+      </div>
+    </div>
+    <div class="flags">
+      <label class="flag-label"><input type="checkbox" id="flagg" checked> global (g)</label>
+      <label class="flag-label"><input type="checkbox" id="flagi"> case-insensitive (i)</label>
+      <label class="flag-label"><input type="checkbox" id="flagm"> multiline (m)</label>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>Test String</label>
+        <textarea id="testString" placeholder="Enter text to test against...">The quick brown fox jumps over the lazy dog. Call me at 555-123-4567 or email test@example.com</textarea>
+      </div>
+    </div>
+    <button onclick="test()">Test Regex</button>
+    <div class="results" id="results">
+      <p>Enter a regex and click Test to see results...</p>
+    </div>
+  </div>
+  <script>
+    function test() {
+      const regexStr = document.getElementById('regex').value;
+      const testStr = document.getElementById('testString').value;
+      const g = document.getElementById('flagg').checked;
+      const i = document.getElementById('flagi').checked;
+      const m = document.getElementById('flagm').checked;
+      const results = document.getElementById('results');
+      
+      if (!regexStr) {
+        results.innerHTML = '<p class="no-match">Please enter a regex pattern</p>';
+        return;
+      }
+      
+      try {
+        const flags = (g ? 'g' : '') + (i ? 'i' : '') + (m ? 'm' : '');
+        const regex = new RegExp(regexStr, flags);
+        
+        if (!testStr) {
+          results.innerHTML = '<p>Enter test string to match</p>';
+          return;
+        }
+        
+        let matches = [];
+        let match;
+        let highlighted = testStr;
+        
+        if (g) {
+          while ((match = regex.exec(testStr)) !== null) {
+            matches.push({ match: match[0], index: match.index, groups: match.slice(1) });
+            if (match.index === regex.lastIndex) regex.lastIndex++;
+          }
+        } else {
+          match = testStr.match(regex);
+          if (match) {
+            matches.push({ match: match[0], index: testStr.search(regex), groups: match.slice(1) });
+          }
+        }
+        
+        if (matches.length === 0) {
+          results.innerHTML = '<p class="no-match">No matches found</p>';
+          return;
+        }
+        
+        // Highlight matches in text
+        let html = testStr.replace(regex, '<span class="match">$&</span>');
+        
+        let output = `<h3>${matches.length} match(es) found:</h3>`;
+        output += `<div style="margin: 15px 0;">${html}</div>`;
+        output += '<div class="match-list">';
+        
+        matches.forEach((m, idx) => {
+          output += `<div class="match-item"><strong>#${idx + 1}:</strong> "${m.match}" at index ${m.index}`;
+          if (m.groups && m.groups.length > 0) {
+            output += `<br><span class="group">Groups: ${m.groups.map(g => `"${g}"`).join(', ')}</span>`;
+          }
+          output += '</div>';
+        });
+        
+        output += '</div>';
+        results.innerHTML = output;
+        
+      } catch (e) {
+        results.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+      }
+    }
+    
+    test();
+    
+    document.getElementById('regex').addEventListener('input', test);
+    document.getElementById('testString').addEventListener('input', test);
+    document.getElementById('flagg').addEventListener('change', test);
+    document.getElementById('flagi').addEventListener('change', test);
+    document.getElementById('flagm').addEventListener('change', test);
+  </script>
+</body>
+</html>

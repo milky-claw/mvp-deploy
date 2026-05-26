@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slug Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; line-height: 1.6; }
+    .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 20px; }
+    label { display: block; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 8px; }
+    textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; height: 100px; resize: vertical; margin-bottom: 15px; }
+    .options { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+    .option { display: flex; align-items: center; gap: 8px; }
+    .output-box { background: #f0f0f0; padding: 15px; border-radius: 6px; margin-bottom: 15px; word-break: break-all; font-family: monospace; font-size: 18px; border: 2px solid #4a90d9; }
+    button { padding: 12px 24px; background: #4a90d9; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-right: 10px; }
+    button:hover { background: #357abd; }
+    .copy-btn { background: #28a745; }
+    .copy-btn:hover { background: #218838; }
+    .examples { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .examples h3 { font-size: 16px; color: #555; margin-bottom: 10px; }
+    .example-item { padding: 8px 12px; background: #f5f5f5; border-radius: 4px; margin-bottom: 8px; cursor: pointer; }
+    .example-item:hover { background: #e9e9e9; }
+    .example-label { font-weight: 600; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Slug Generator</h1>
+    <label>Enter text to convert to URL slug:</label>
+    <textarea id="input" placeholder="e.g., Hello World! How are you today?">Hello World! How are you today?</textarea>
+    
+    <div class="options">
+      <div class="option">
+        <input type="checkbox" id="lowercase" checked>
+        <label for="lowercase">Lowercase</label>
+      </div>
+      <div class="option">
+        <input type="checkbox" id="trim" checked>
+        <label for="trim">Trim extra dashes</label>
+      </div>
+      <div class="option">
+        <input type="checkbox" id="alphanumeric">
+        <label for="alphanumeric">Letters & numbers only</label>
+      </div>
+    </div>
+    
+    <div class="output-box" id="output">hello-world-how-are-you-today</div>
+    
+    <button onclick="generate()">Generate</button>
+    <button class="copy-btn" onclick="copy()">Copy</button>
+    
+    <div class="examples">
+      <h3>Click to try examples:</h3>
+      <div class="example-item" onclick="setInput('My Blog Post Title')"><span class="example-label">Simple:</span> My Blog Post Title → my-blog-post-title</div>
+      <div class="example-item" onclick="setInput('  Spaces   and   Multiple   --- Dashes  ')"><span class="example-label">Punctuation:</span> Spaces and Multiple Dashes</div>
+      <div class="example-item" onclick="setInput('Café au Lait with Crème')"><span class="example-label">Special chars:</span> Café au Lait with Crème</div>
+      <div class="example-item" onclick="setInput('Product #123 - Best Seller!')"><span class="example-label">With numbers:</span> Product #123 - Best Seller!</div>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const lowercase = document.getElementById('lowercase');
+    const trim = document.getElementById('trim');
+    const alphanumeric = document.getElementById('alphanumeric');
+    
+    function generate() {
+      let text = input.value;
+      
+      // Replace spaces with dashes
+      text = text.replace(/\s+/g, '-');
+      
+      // Remove non-alphanumeric (except dashes)
+      if (alphanumeric.checked) {
+        text = text.replace(/[^a-zA-Z0-9-]/g, '');
+      }
+      
+      // Convert to lowercase
+      if (lowercase.checked) {
+        text = text.toLowerCase();
+      }
+      
+      // Trim multiple dashes
+      if (trim.checked) {
+        text = text.replace(/-+/g, '-');
+        text = text.replace(/^-|-$/g, '');
+      }
+      
+      output.textContent = text || '(empty)';
+    }
+    
+    function setInput(val) {
+      input.value = val;
+      generate();
+    }
+    
+    function copy() {
+      navigator.clipboard.writeText(output.textContent).then(() => alert('Copied!'));
+    }
+    
+    input.addEventListener('input', generate);
+    lowercase.addEventListener('change', generate);
+    trim.addEventListener('change', generate);
+    alphanumeric.addEventListener('change', generate);
+  </script>
+</body>
+</html>
